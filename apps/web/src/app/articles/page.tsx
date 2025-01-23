@@ -1,4 +1,4 @@
-import { type Metadata } from 'next'
+import type { Metadata } from 'next'
 
 import { Card } from '@/components/Card'
 import { SimpleLayout } from '@/components/SimpleLayout'
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 }
 
 export default async function ArticlesIndex() {
-  let articles = await getAllArticles()
+  const articles = await getAllArticles()
 
   return (
     <SimpleLayout

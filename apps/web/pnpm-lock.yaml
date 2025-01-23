@@ -29,6 +29,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.4
         version: 0.5.16(tailwindcss@4.0.0)
+      '@types/mdx':
+        specifier: ^2.0.13
+        version: 2.0.13
       '@types/node':
         specifier: ^20.10.8
         version: 20.17.16
