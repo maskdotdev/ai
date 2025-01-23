@@ -1,4 +1,4 @@
-import { type Metadata } from 'next'
+import type { Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
 import { Layout } from '@/components/Layout'
@@ -7,12 +7,12 @@ import '@/styles/tailwind.css'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s - Spencer Sharp',
+    template: '%s - Kiyotaka',
     default:
-      'Spencer Sharp - Software designer, founder, and amateur astronaut',
+      'Kiyotaka - Software, Artificial Intelligence, and coffee.',
   },
   description:
-    'I’m Spencer, a software designer and entrepreneur based in New York City. I’m the founder and CEO of Planetaria, where we develop technologies that empower regular people to explore space on their own terms.',
+    "I'm Kiyotaka, a software and AI enthusiast.I'm passionate about building AI systems from the ground up and sharing knowledge with others. I want to help myself and others by understanding the inner workings of artificial intelligence.",
   alternates: {
     types: {
       'application/rss+xml': `${process.env.NEXT_PUBLIC_SITE_URL}/feed.xml`,
