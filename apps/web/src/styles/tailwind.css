@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import './prism.css' layer(components);
 
 @plugin '@tailwindcss/typography';
 @config '../../typography.ts';
@@ -161,6 +160,13 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+  
+  /* Shiki theme variables */
+  :root {
+    --shiki-foreground: var(--color-foreground);
+    --shiki-background: transparent;
+  }
+  
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -194,6 +200,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  
+  /* Shiki dark theme variables */
+  .dark {
+    --shiki-foreground: var(--color-foreground);
+    --shiki-background: transparent;
   }
 }
 

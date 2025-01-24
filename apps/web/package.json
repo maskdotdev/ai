@@ -41,10 +41,12 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
+    "shiki": "^2.1.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
+    "@shikijs/rehype": "^2.1.0",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.0.4",
     "prettier": "^3.3.2",

@@ -37,7 +37,9 @@ function Article({ article }: { article: ArticleWithSlug }) {
   return (
     <Card as="article">
       <Card.Title href={`/articles/${article.slug}`}>
-        {article.title}
+        {article.title} -
+        {article.draft &&
+          <span className='ml-2 bg-red-100 text-red-600 py-1 px-3 rounded-full'>Draft</span>}
       </Card.Title>
       <Card.Eyebrow as="time" dateTime={article.date} decorate>
         {formatDate(article.date)}

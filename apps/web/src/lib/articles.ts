@@ -5,6 +5,7 @@ interface Article {
   description: string
   author: string
   date: string
+  draft?: boolean
 }
 
 export interface ArticleWithSlug extends Article {
@@ -25,12 +26,16 @@ async function importArticle(
   }
 }
 
-export async function getAllArticles() {
+export async function getAllArticles(includeDrafts = process.env.NODE_ENV === 'development') {
   const articleFilenames = await glob('*/page.mdx', {
     cwd: './src/app/articles',
   })
 
   const articles = await Promise.all(articleFilenames.map(importArticle))
 
-  return articles.sort((a, z) => +new Date(z.date) - +new Date(a.date))
+  const filteredArticles = includeDrafts
+    ? articles
+    : articles.filter((article) => !article.draft)
+
+  return filteredArticles.sort((a, z) => +new Date(z.date) - +new Date(a.date))
 }
