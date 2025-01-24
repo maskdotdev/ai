@@ -10,13 +10,14 @@ export async function GET(req: Request) {
   }
 
   const author = {
-    name: 'Spencer Sharp',
-    email: 'spencer@planetaria.tech',
+    name: 'Kiyotaka',
+    email: 'maskdotdev@gmail.com',
   }
 
   const feed = new Feed({
     title: author.name,
-    description: 'Your blog description',
+    description:
+      'Exploring artificial intelligence, software development, and personal insights',
     author,
     id: siteUrl,
     link: siteUrl,

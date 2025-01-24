@@ -1,18 +1,20 @@
-import type { Metadata } from 'next'
+import { type Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
 import { Layout } from '@/components/Layout'
+import { CommandMenu } from '@/components/CommandMenu'
+import { SearchIndexer } from '@/components/SearchIndexer'
+import { getAllArticles } from '@/lib/articles'
 
 import '@/styles/tailwind.css'
 
 export const metadata: Metadata = {
   title: {
     template: '%s - Kiyotaka',
-    default:
-      'Kiyotaka - Software, Artificial Intelligence, and coffee.',
+    default: 'Kiyotaka - Software, Artificial Intelligence, and coffee.',
   },
   description:
-    "I'm Kiyotaka, a software and AI enthusiast.I'm passionate about building AI systems from the ground up and sharing knowledge with others. I want to help myself and others by understanding the inner workings of artificial intelligence.",
+    "I'm Kiyotaka, a software and AI enthusiast. I'm passionate about building AI systems from the ground up and sharing knowledge with others. I want to help myself and others by understanding the inner workings of artificial intelligence.",
   alternates: {
     types: {
       'application/rss+xml': `${process.env.NEXT_PUBLIC_SITE_URL}/feed.xml`,
@@ -20,11 +22,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const articles = await getAllArticles()
+
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className="flex h-full bg-zinc-50 dark:bg-black">
@@ -32,6 +36,8 @@ export default function RootLayout({
           <div className="flex w-full">
             <Layout>{children}</Layout>
           </div>
+          <SearchIndexer articles={articles} />
+          <CommandMenu />
         </Providers>
       </body>
     </html>

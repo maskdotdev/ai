@@ -1,0 +1,165 @@
+import { ArticleLayout } from '@/components/ArticleLayout'
+// import LinearTransformation from '@/components/ClientLinearTransformation'
+
+export const article = {
+  author: 'Kiyotaka',
+  date: '2025-01-23',
+  title: 'Linear Algebra Matrix',
+  description:
+    'A comprehensive guide to understanding linear algebra fundamentals, focusing on vectors from both geometrical and algebraic perspectives. Covers essential concepts including vector operations, norms, basis vectors, and their applications in machine learning. Features detailed explanations of vector addition, scalar multiplication, dot products, and cross products, with visual aids and mathematical notations.',
+}
+
+export const metadata = {
+  title: article.title,
+  description: article.description,
+}
+
+export default (props) => <ArticleLayout article={article} {...props} />
+
+## Video Resources
+
+#linear-algebra #vectors
+
+Video: [Vectors | Chapter 1, Essence of linear algebra](https://www.youtube.com/watch?v=fNk_zzaMoSs&list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab&index=1)
+Video: [Linear combinations, span, and basis vectors | Chapter 2, Essence of linear algebra](https://www.youtube.com/watch?v=k7RM-ot2NWY&list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab&index=2)
+
+- **What to Learn:**
+    - Definition of vectors (geometrical and algebraic perspectives)
+    - Vector operations: addition, scalar multiplication, dot product, and cross product
+    - Vector norms (magnitude/length): L1, L2 norms
+    - Basis vectors and the concept of a **vector space**
+    - Linear combinations and span of vectors
+	
+- **Why It's Important:**
+    - In machine learning, data points are often represented as vectors.
+    - The dot product and norms are used in distance-based models (e.g., **k-NN**, **SVMs**, etc.).
+
+## Geometrical Perspective
+A vector is a line segment with both magnitude and direction.
+
+We can think of a vector as an arrow where it's tail sits at the origin of a plane, and points to either 0 or any give scalar. 
+
+### Characteristics 
+
+* Usually represented by an arrow
+* The length of the arrow represents the magnitude
+* The orientation of the arrow represents the direction
+* Commonly denoted by letters with a tilde above $$ \tilde{v}$$
+![[Vector.png]]
+
+### Examples
+
+* In 2D space a vector can represent a displacement from point A to point B
+* Moving 3 units East and 1 unit North as the example above shows
+
+## Algebraic Perspective
+
+A vector is an order list of numbers that describes its components in various axes in space.
+
+2D Vector simply means there's two numbers
+$$
+\begin{bmatrix}
+{3} \\
+{1} \\
+\end{bmatrix}
+
+\mathbf{v =} 
+\begin{pmatrix}
+v_{3}, 
+v_{1}
+\end{pmatrix}
+$$
+
+Similarly 3D Vector means there's three numbers
+
+$$
+\begin{bmatrix}
+{3} \\
+{1} \\
+{2}
+\end{bmatrix}
+
+
+\mathbf{v =} 
+\begin{pmatrix}
+
+v_{3}, 
+v_{1},
+v_{2}
+
+\end{pmatrix}
+
+$$
+
+### Characteristics
+* Each component represents how much a vector moves along an axis.
+* Vectors in higher dimensions are generalizations
+$$
+(\mathbb{R}^n), 
+\mathbf{v =} 
+\begin{pmatrix}
+
+v_{1}, 
+v_{2},
+\dots,
+v_{n}
+
+\end{pmatrix}
+$$
+
+### Vector Notation
+$$
+
+\mathbf{v =} 
+\begin{pmatrix}
+v_{1}, 
+v_{2},
+\dots,
+v_{n}
+\end{pmatrix}
+
+\mathbf{v =} 
+\begin{bmatrix}
+{3} \\
+{1} \\
+{2}
+\end{bmatrix}
+$$
+
+## Vector Operations
+
+### Addition
+The sum of two vectors is a vector obtained from adding their corresponding components
+
+- *Geometrical* - Place the _tail_ of the second vector at the _head_ of the first vector. The sum vector points from the _tail_ of the firs vector to the _head_ of the second vector
+![[Pasted image 20250106214057.png]]
+
+- _Algebraic Formula_  
+$$ 
+u+v=(ux​+vx​,uy​+vy​,uz​+vz​) \\
+$$
+$$
+
+\mathbf{u} = (1, 2, 3) \\
+\mathbf{v} = (4, 5, 6)
+$$
+$$
+u+v= (1 + 4, 2 + 5, 3+6) = (5, 7, 9)
+$$
+
+### Scalar Multiplication
+Multiplying a vector by a scalar (number) scales the magnitude of the vector in its direction, multiplying by a negative number would scale to the opposite direction.
+
+- _Algebraic Formula_
+$$
+c \cdot v = (c \cdot v_{x}, c \cdot v_{y}, c \cdot v_{z})
+$$
+$$\text{Where } c \text{ is the scalar and } v = (v_{x}, v_{y}, v_{z}) $$
+
+### Dot Product
+ Video Resource:  [Dot products and duality | Chapter 9, Essence of linear algebra](https://www.youtube.com/@3blue1brown)
+ 
+### Cross Product
+Video Resource: 
+
+[Cross products | Chapter 10, Essence of linear algebra](https://www.youtube.com/@3blue1brown)
