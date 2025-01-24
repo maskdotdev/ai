@@ -31,7 +31,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <script src="https://unpkg.com/react-scan/dist/auto.global.js" async />
       <body className="flex h-full bg-zinc-50 dark:bg-black">
         <Providers>
           <div className="flex w-full">
