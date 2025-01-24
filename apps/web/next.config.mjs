@@ -1,9 +1,9 @@
-import rehypeShiki from '@shikijs/rehype'
 import nextMDX from '@next/mdx'
 import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
-import { createHighlighter } from 'shiki'
+import rehypePrettyCode from 'rehype-pretty-code'
+import rehypeSlug from 'rehype-slug'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -34,28 +34,16 @@ const nextConfig = {
   },
 }
 
-// Initialize the highlighter once at startup
-const getShikiHighlighter = async () => {
-  return await createHighlighter({
-    themes: ['tokyo-night', 'catppuccin-latte'],
-    langs: [
-      'javascript',
-      'typescript',
-      'jsx',
-      'tsx',
-      'css',
-      'json',
-      'bash',
-      'markdown',
-      'python',
-      'html',
-      'c',
-      'c++',
-    ],
-  })
+/** @type {import('rehype-pretty-code').Options} */
+const prettyCodeOptions = {
+  theme: {
+    dark: 'tokyo-night',
+    light: 'catppuccin-latte',
+  },
+  keepBackground: false,
+  defaultLang: 'plaintext',
+  // grid: true,
 }
-
-const highlighter = await getShikiHighlighter()
 
 const withMDX = nextMDX({
   extension: /\.mdx?$/,
@@ -63,18 +51,9 @@ const withMDX = nextMDX({
     remarkPlugins: [remarkGfm, remarkMath],
     // Process math blocks before syntax highlighting
     rehypePlugins: [
+      [rehypePrettyCode, prettyCodeOptions],
       [rehypeKatex, { strict: true }],
-      [
-        rehypeShiki,
-        {
-          highlighter,
-          themes: {
-            light: 'tokyo-night',
-            dark: 'catppuccin-latte',
-          },
-          cssVariablePrefix: '--shiki-',
-        },
-      ],
+      rehypeSlug,
     ],
   },
 })
