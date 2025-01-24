@@ -5,7 +5,7 @@ import type { DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
-import { Dialog, DialogContent } from "@/components/Dialog"
+import { Dialog, DialogContent } from "@/components/dialog"
 import clsx from "clsx"
 
 const Command = React.forwardRef<

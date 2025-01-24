@@ -9,30 +9,40 @@ export interface SearchableItem {
   snippet?: string
 }
 
-interface SearchResult {
-  field: string
-  result: string[]
-}
-
-// Keep a mapping of href to content and title
-const contentMap = new Map<string, { title: string; content: string }>()
-
-const searchIndex = new FlexSearch.Document({
+// Create a document index for multi-field search
+const index = new FlexSearch.Document({
   document: {
     id: 'href',
-    index: ['title', 'content']
+    index: [
+      {
+        field: 'title',
+        tokenize: 'forward', // Good for title autocomplete
+        optimize: true,
+        resolution: 9,
+        cache: true
+      },
+      {
+        field: 'content',
+        tokenize: 'strict', // Better for content search
+        optimize: true,
+        resolution: 5,
+        context: {
+          depth: 2,
+          resolution: 9
+        }
+      }
+    ],
+    store: ['title', 'content'] // Store these fields for snippet generation
   },
   tokenize: 'full',
-  cache: true
+  charset: 'latin:extra', // Better character handling
+  language: 'en'
 })
 
 export function addToIndex(item: SearchableItem) {
-  contentMap.set(item.href, { 
-    title: item.title, 
-    content: item.content || '' 
-  })
-  
-  searchIndex.add({
+  if (!item.content) return
+
+  index.add({
     href: item.href,
     title: item.title,
     content: item.content
@@ -43,38 +53,60 @@ function findSnippet(content: string, query: string): string {
   const lowerContent = content.toLowerCase()
   const lowerQuery = query.toLowerCase()
   const index = lowerContent.indexOf(lowerQuery)
-  
-  if (index === -1) return content.slice(0, 100) + '...' // If no exact match, return start of content
-  
+
+  if (index === -1) {
+    // If no exact match found, return first 100 chars
+    return `${content.slice(0, 100)}...`
+  }
+
+  // Get surrounding context
   const start = Math.max(0, index - 50)
   const end = Math.min(content.length, index + query.length + 50)
   const snippet = content.slice(start, end)
-  
-  return (start > 0 ? '...' : '') + snippet + (end < content.length ? '...' : '')
+
+  return `${start > 0 ? '...' : ''}${snippet}${end < content.length ? '...' : ''}`
+}
+
+interface StoredDoc {
+  title: string
+  content: string
+}
+
+interface SearchResult {
+  field: string
+  result: Array<{
+    id: string | string[]
+    doc: StoredDoc
+    score: number
+  }>
 }
 
 export async function search(query: string): Promise<SearchableItem[]> {
-  if (!query) return []
+  if (!query || query.length < 2) return []
 
-  const searchResults = await searchIndex.search(query) as SearchResult[]
+  const results = await index.searchAsync(query, {
+    enrich: true,
+    limit: 5,
+    bool: 'or'
+  }) as SearchResult[]
+
+  const searchResults: SearchableItem[] = []
   const seenHrefs = new Set<string>()
-  const results: SearchableItem[] = []
 
-  for (const result of searchResults) {
-    for (const href of result.result) {
+  for (const result of results) {
+    for (const { id, doc } of result.result) {
+      const href = Array.isArray(id) ? id[0] : id
       if (seenHrefs.has(href)) continue
       seenHrefs.add(href)
 
-      const content = contentMap.get(href)
-      if (!content) continue
-
-      results.push({
-        title: content.title,
+      searchResults.push({
+        title: doc.title,
         href,
-        snippet: findSnippet(content.content, query)
+        snippet: findSnippet(doc.content, query)
       })
     }
   }
 
-  return results
-} 
+  return searchResults
+}
+

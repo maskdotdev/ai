@@ -2,10 +2,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import clsx from 'clsx'
 
-import { Card } from '@/components/Card'
-import { Container } from '@/components/Container'
+import { Card } from '@/components/card'
+import { Container } from '@/components/container'
 import { type ArticleWithSlug, getAllArticles } from '@/lib/articles'
-import { formatDate } from '@/lib/formatDate'
+import { formatDate } from '@/lib/format-date'
 import { SOCIALS } from '@/lib/constants'
 
 

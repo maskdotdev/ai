@@ -1,9 +1,9 @@
-import { type Metadata } from 'next'
+import type { Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
-import { Layout } from '@/components/Layout'
-import { CommandMenu } from '@/components/CommandMenu'
-import { SearchIndexer } from '@/components/SearchIndexer'
+import { Layout } from '@/components/layout'
+import { CommandMenu } from '@/components/command-menu'
+import { SearchIndexer } from '@/components/search-indexer'
 import { getAllArticles } from '@/lib/articles'
 
 import '@/styles/tailwind.css'
@@ -31,6 +31,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <script src="https://unpkg.com/react-scan/dist/auto.global.js" async />
       <body className="flex h-full bg-zinc-50 dark:bg-black">
         <Providers>
           <div className="flex w-full">

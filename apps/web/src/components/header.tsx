@@ -13,8 +13,7 @@ import {
 } from '@headlessui/react'
 import clsx from 'clsx'
 
-import { Container } from '@/components/Container'
-import kiyotaka from '@/images/kiyotaka.jpg'
+import { Container } from '@/components/container'
 
 function CloseIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
@@ -244,6 +243,8 @@ function Avatar({
 }: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href'> & {
   large?: boolean
 }) {
+  const kiyotaka = 'https://images.mask.dev/kiyotaka.jpg'
+
   return (
     <Link
       href="/"
@@ -254,6 +255,8 @@ function Avatar({
       <Image
         src={kiyotaka}
         alt=""
+        width={16}
+        height={16}
         sizes={large ? '4rem' : '2.25rem'}
         className={clsx(
           'rounded-full bg-zinc-100 object-cover dark:bg-zinc-800',

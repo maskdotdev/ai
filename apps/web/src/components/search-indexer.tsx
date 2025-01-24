@@ -12,13 +12,13 @@ interface Article {
 export function SearchIndexer({ articles }: { articles: Article[] }) {
   useEffect(() => {
     // Index all articles
-    articles.forEach((article) => {
+    for (const article of articles) {
       addToIndex({
         title: article.title,
         href: `/articles/${article.slug}`,
         content: article.description
       })
-    })
+    }
   }, [articles])
 
   return null
