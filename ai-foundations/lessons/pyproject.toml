@@ -1,0 +1,7 @@
+[project]
+name = "lessons"
+version = "0.1.0"
+description = "penn state university ai foundations course"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
