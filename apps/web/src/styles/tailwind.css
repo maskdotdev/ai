@@ -320,9 +320,10 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
   }
 
   .matrix-background::before {
-    content: "";
-    @apply absolute inset-0 pointer-events-none;
-    background: linear-gradient(180deg, 
+    content: '';
+    @apply pointer-events-none absolute inset-0;
+    background: linear-gradient(
+      180deg,
       rgb(var(--matrix-black) / 0) 0%,
       rgb(var(--matrix-green) / 0.03) 50%,
       rgb(var(--matrix-black) / 0) 100%
@@ -332,18 +333,18 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
   }
 
   .matrix-chars {
-    @apply absolute inset-0 pointer-events-none overflow-hidden;
+    @apply pointer-events-none absolute inset-0 overflow-hidden;
   }
 
   .matrix-chars::before {
-    content: "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ";
+    content: 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ';
     @apply absolute font-mono text-xs leading-none whitespace-nowrap text-[rgb(var(--matrix-green))] opacity-10;
     writing-mode: vertical-rl;
     animation: matrix-chars 2s linear infinite;
   }
 
   .matrix-chars::after {
-    content: "ｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789";
+    content: 'ｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789';
     @apply absolute font-mono text-xs leading-none whitespace-nowrap text-[rgb(var(--matrix-green))] opacity-10;
     writing-mode: vertical-rl;
     animation: matrix-chars 3s linear infinite;
@@ -352,7 +353,7 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
 
   .matrix-text {
     @apply text-[rgb(var(--matrix-green))];
-    text-shadow: 
+    text-shadow:
       0 0 10px rgb(var(--matrix-green) / 0.6),
       0 0 20px rgb(var(--matrix-green) / 0.4),
       0 0 30px rgb(var(--matrix-green) / 0.2);
@@ -374,7 +375,7 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
   }
 
   .matrix-cursor::after {
-    content: "█";
+    content: '█';
     @apply absolute ml-0.5;
     animation: cursor-blink 1s step-end infinite;
   }
@@ -398,14 +399,14 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
   }
 
   .shadow-matrix {
-    box-shadow: 
+    box-shadow:
       0 0 10px rgb(var(--matrix-green) / 0.3),
       0 0 20px rgb(var(--matrix-green) / 0.2),
       0 0 30px rgb(var(--matrix-green) / 0.1);
   }
 
   .shadow-matrix-strong {
-    box-shadow: 
+    box-shadow:
       0 0 15px rgb(var(--matrix-green) / 0.5),
       0 0 30px rgb(var(--matrix-green) / 0.3),
       0 0 45px rgb(var(--matrix-green) / 0.2);
@@ -413,8 +414,12 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
 }
 
 @keyframes matrix-rain {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 0% 100%; }
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
 }
 
 @keyframes matrix-chars {
@@ -433,19 +438,24 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
 }
 
 @keyframes matrix-flow {
-  from { stroke-dashoffset: 0; }
-  to { stroke-dashoffset: 8; }
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 8;
+  }
 }
 
 @keyframes matrix-glow {
-  0%, 100% {
-    text-shadow: 
+  0%,
+  100% {
+    text-shadow:
       0 0 10px rgb(var(--matrix-green) / 0.6),
       0 0 20px rgb(var(--matrix-green) / 0.4),
       0 0 30px rgb(var(--matrix-green) / 0.2);
   }
   50% {
-    text-shadow: 
+    text-shadow:
       0 0 15px rgb(var(--matrix-green) / 0.8),
       0 0 25px rgb(var(--matrix-green) / 0.6),
       0 0 35px rgb(var(--matrix-green) / 0.4);
@@ -453,8 +463,13 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
 }
 
 @keyframes matrix-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes matrix-fade {
@@ -469,6 +484,11 @@ code[data-line-numbers-max-digits='4'] > [data-line]::before {
 }
 
 @keyframes cursor-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }

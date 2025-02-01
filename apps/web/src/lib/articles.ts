@@ -26,7 +26,9 @@ async function importArticle(
   }
 }
 
-export async function getAllArticles(includeDrafts = process.env.NODE_ENV === 'development') {
+export async function getAllArticles(
+  includeDrafts = process.env.NODE_ENV === 'development',
+) {
   const articleFilenames = await glob('*/page.mdx', {
     cwd: './src/app/articles',
   })

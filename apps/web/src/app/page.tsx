@@ -103,7 +103,7 @@ export default async function Home() {
           <h1 className="text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
             Software, Artificial Intelligence, and coffee.
           </h1>
-          <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
+          <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400 matrix-text">
             I&apos;m Kiyotaka, a software and AI enthusiast. I&apos;m passionate about building AI systems from the ground up and sharing knowledge with others. I want to help myself and others by understanding the inner workings of artificial intelligence.
           </p>
           <div className="mt-6 flex gap-6">

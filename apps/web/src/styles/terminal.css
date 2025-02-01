@@ -99,24 +99,28 @@
 
 @keyframes textShadowPulse {
   0% {
-    text-shadow: 0 0 10px rgba(0, 255, 0, 0.6),
-                 0 0 20px rgba(0, 255, 0, 0.4),
-                 0 0 30px rgba(0, 255, 0, 0.2);
+    text-shadow:
+      0 0 10px rgba(0, 255, 0, 0.6),
+      0 0 20px rgba(0, 255, 0, 0.4),
+      0 0 30px rgba(0, 255, 0, 0.2);
   }
   50% {
-    text-shadow: 0 0 15px rgba(0, 255, 0, 0.8),
-                 0 0 25px rgba(0, 255, 0, 0.6),
-                 0 0 35px rgba(0, 255, 0, 0.4);
+    text-shadow:
+      0 0 15px rgba(0, 255, 0, 0.8),
+      0 0 25px rgba(0, 255, 0, 0.6),
+      0 0 35px rgba(0, 255, 0, 0.4);
   }
   100% {
-    text-shadow: 0 0 10px rgba(0, 255, 0, 0.6),
-                 0 0 20px rgba(0, 255, 0, 0.4),
-                 0 0 30px rgba(0, 255, 0, 0.2);
+    text-shadow:
+      0 0 10px rgba(0, 255, 0, 0.6),
+      0 0 20px rgba(0, 255, 0, 0.4),
+      0 0 30px rgba(0, 255, 0, 0.2);
   }
 }
 
 @keyframes cursor-blink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -130,13 +134,14 @@
 }
 
 .matrix-background::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, 
+  background: linear-gradient(
+    180deg,
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 255, 0, 0.03) 50%,
     rgba(0, 0, 0, 0) 100%
@@ -157,7 +162,7 @@
 }
 
 .matrix-chars::before {
-  content: "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ";
+  content: 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ';
   position: absolute;
   font-family: monospace;
   font-size: 12px;
@@ -170,7 +175,7 @@
 }
 
 .matrix-chars::after {
-  content: "ｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789";
+  content: 'ｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789';
   position: absolute;
   font-family: monospace;
   font-size: 12px;
@@ -184,7 +189,7 @@
 }
 
 .matrix-background::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -208,9 +213,10 @@
 
 .matrix-text {
   color: #00ff00;
-  text-shadow: 0 0 10px rgba(0, 255, 0, 0.6),
-               0 0 20px rgba(0, 255, 0, 0.4),
-               0 0 30px rgba(0, 255, 0, 0.2);
+  text-shadow:
+    0 0 10px rgba(0, 255, 0, 0.6),
+    0 0 20px rgba(0, 255, 0, 0.4),
+    0 0 30px rgba(0, 255, 0, 0.2);
 }
 
 .matrix-text-dim {
@@ -234,7 +240,7 @@
 }
 
 .matrix-cursor::after {
-  content: "█";
+  content: '█';
   position: absolute;
   margin-left: 2px;
   animation: cursor-blink 1s step-end infinite;
@@ -315,4 +321,5 @@
   100% {
     filter: brightness(1);
   }
-} 
+}
+

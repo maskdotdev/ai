@@ -19,7 +19,7 @@ const index = new FlexSearch.Document({
         tokenize: 'forward', // Good for title autocomplete
         optimize: true,
         resolution: 9,
-        cache: true
+        cache: true,
       },
       {
         field: 'content',
@@ -28,15 +28,15 @@ const index = new FlexSearch.Document({
         resolution: 5,
         context: {
           depth: 2,
-          resolution: 9
-        }
-      }
+          resolution: 9,
+        },
+      },
     ],
-    store: ['title', 'content'] // Store these fields for snippet generation
+    store: ['title', 'content'], // Store these fields for snippet generation
   },
   tokenize: 'full',
   charset: 'latin:extra', // Better character handling
-  language: 'en'
+  language: 'en',
 })
 
 export function addToIndex(item: SearchableItem) {
@@ -45,7 +45,7 @@ export function addToIndex(item: SearchableItem) {
   index.add({
     href: item.href,
     title: item.title,
-    content: item.content
+    content: item.content,
   })
 }
 
@@ -84,11 +84,11 @@ interface SearchResult {
 export async function search(query: string): Promise<SearchableItem[]> {
   if (!query || query.length < 2) return []
 
-  const results = await index.searchAsync(query, {
+  const results = (await index.searchAsync(query, {
     enrich: true,
     limit: 5,
-    bool: 'or'
-  }) as SearchResult[]
+    bool: 'or',
+  })) as SearchResult[]
 
   const searchResults: SearchableItem[] = []
   const seenHrefs = new Set<string>()
@@ -102,11 +102,10 @@ export async function search(query: string): Promise<SearchableItem[]> {
       searchResults.push({
         title: doc.title,
         href,
-        snippet: findSnippet(doc.content, query)
+        snippet: findSnippet(doc.content, query),
       })
     }
   }
 
   return searchResults
 }
-
