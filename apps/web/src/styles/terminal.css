@@ -134,7 +134,7 @@
 }
 
 .matrix-background::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -162,7 +162,7 @@
 }
 
 .matrix-chars::before {
-  content: 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ';
+  content: "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ";
   position: absolute;
   font-family: monospace;
   font-size: 12px;
@@ -175,7 +175,7 @@
 }
 
 .matrix-chars::after {
-  content: 'ｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789';
+  content: "ｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789";
   position: absolute;
   font-family: monospace;
   font-size: 12px;
@@ -189,7 +189,7 @@
 }
 
 .matrix-background::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -240,7 +240,7 @@
 }
 
 .matrix-cursor::after {
-  content: '█';
+  content: "█";
   position: absolute;
   margin-left: 2px;
   animation: cursor-blink 1s step-end infinite;
@@ -322,4 +322,3 @@
     filter: brightness(1);
   }
 }
-

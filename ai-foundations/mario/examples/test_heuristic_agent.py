@@ -323,13 +323,14 @@ def run_weight_test(weights: dict[str, float],
     )
 
 
-def save_results(results: AggregatedResults, test_name: str) -> str:
+def save_results(results: AggregatedResults, test_name: str, simulation_name: str | None = None) -> str:
     """
     Save test results to a file.
     
     Args:
         results: Test results to save
         test_name: Name of the test
+        simulation_name: Optional name for the simulation run
         
     Returns:
         Path to the saved file
@@ -337,9 +338,12 @@ def save_results(results: AggregatedResults, test_name: str) -> str:
     # Create results directory if it doesn't exist
     os.makedirs(RESULTS_DIR, exist_ok=True)
     
-    # Generate filename with timestamp
+    # Generate filename with timestamp and optional simulation name
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{test_name}_{timestamp}.json"
+    if simulation_name:
+        filename = f"{simulation_name}_{test_name}_{timestamp}.json"
+    else:
+        filename = f"{test_name}_{timestamp}.json"
     filepath = os.path.join(RESULTS_DIR, filename)
     
     # Save results as JSON
@@ -402,6 +406,7 @@ def main():
     _ = parser.add_argument('--verbose', action='store_true', help='Print detailed move information')
     _ = parser.add_argument('--debug', action='store_true', help='Enable debug mode for the agent')
     _ = parser.add_argument('--test-name', type=str, default='heuristic_test', help='Name for the test')
+    _ = parser.add_argument('--simulation-name', type=str, help='Optional name for the simulation run')
     _ = parser.add_argument('--custom-env', action='store_true', help='Use custom environment without automatic downward movement')
     
     # Weight parameters
@@ -441,7 +446,7 @@ def main():
     print_results_table(results)
     
     # Save results
-    save_results(results, args.test_name)
+    save_results(results, args.test_name, args.simulation_name)
 
 
 if __name__ == "__main__":
