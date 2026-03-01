@@ -26,7 +26,7 @@ But there is a catch, which is that shoving two million tokens into a neural net
 
 Also, it is incredibly expensive. Every time you ask the AI a follow-up question, the computer has to re-process all two million tokens. That's bad.
 
-So a team of researchers—Alex L. Zhang, Tim Kraska, and Omar Khattab—recently published a paper titled "Recursive Language Models." They looked at the problem of massive context windows and decided that the entire approach was wrong.
+So a team of researchers, Alex L. Zhang, Tim Kraska, and Omar Khattab, recently published a paper titled "Recursive Language Models." They looked at the problem of massive context windows and decided that the entire approach was wrong.
 
 Their insight is that if you have a ten-million-word document, you should not feed it into the AI's brain. You should feed it into a Python environment, and let the AI write code to look at it.
 
@@ -38,9 +38,9 @@ Here is how it works. You give the RLM a massive, ten-million-token prompt. But 
 
 The AI looks at the user's question, and it thinks, "Hmm, I need to find information about a citrus-based asset acquisition." So it writes a Python script to chop the `prompt` variable into 100 smaller chunks.
 
-But it still can't read all 100 chunks itself. So it uses a special function to *recursively call a clone of itself*. It writes a script that effectively says: "Hey, mini-LLM, look at chunk number 42. Tell me if it mentions anything about buying a beverage business."
+But it still can't read all 100 chunks itself. So it uses a special function to _recursively call a clone of itself_. It writes a script that effectively says: "Hey, mini-LLM, look at chunk number 42. Tell me if it mentions anything about buying a beverage business."
 
-The clone wakes up, reads the short snippet—which is small enough that the clone doesn't suffer from context rot—and returns a summary. The main AI collects all the summaries from all the clones, reads them, and synthesizes the final answer.
+The clone wakes up, reads the short snippet, which is small enough that the clone doesn't suffer from context rot, and returns a summary. The main AI collects all the summaries from all the clones, reads them, and synthesizes the final answer.
 
 It seems hard to believe that no one built this natively into the models before, because it is exactly how humans handle large amounts of information? You do not memorize the encyclopedia. You look at the index, you flip to the page, you read the paragraph, and if it's too dense, you ask an expert.
 
@@ -52,7 +52,7 @@ Second, it cures context rot. Because the neural network is only ever reading sm
 
 Third, and perhaps most importantly for the people paying the cloud computing bills, it is surprisingly cheap.
 
-If you put 10 million tokens into a standard LLM, you pay for 10 million tokens of compute. If you ask it to rethink its answer, you pay for 10 million tokens again. But with an RLM, the main model only sees a short prompt and some Python code. The clones only see the small snippets they are assigned. The total number of tokens processed by the neural network is actually *lower* than if you had just shoved the whole document in at once. You are trading brute-force memory for inference-time reasoning.
+If you put 10 million tokens into a standard LLM, you pay for 10 million tokens of compute. If you ask it to rethink its answer, you pay for 10 million tokens again. But with an RLM, the main model only sees a short prompt and some Python code. The clones only see the small snippets they are assigned. The total number of tokens processed by the neural network is actually _lower_ than if you had just shoved the whole document in at once. You are trading brute-force memory for inference-time reasoning.
 
 Here is how the researchers describe the core philosophy:
 
