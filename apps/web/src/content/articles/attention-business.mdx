@@ -1,0 +1,109 @@
+---
+title: The Attention Business
+author: Kiyotaka
+date: 02/02/2026
+draft: false
+description: A deep dive into the Transformer architecture and the attention mechanism that changed AI forever.
+---
+
+Suppose you are a translator. A very prestigious, high-stakes translator. You are sitting in a booth at the United Nations, and your job is to listen to a delegate give a very long, very boring speech in French and turn it into English in real-time.
+
+This is a hard job. Specifically, it is a memory job.
+
+If the delegate says, "The large, green, slightly damp, somewhat aggressive, but ultimately misunderstood frog sat on the log," you have a problem. By the time you get to the word "sat," you have to remember that it was a "frog" doing the sitting, not the "log" or the "delegate." You have to carry that "frog" in your head through a whole forest of adjectives.
+
+In the old days of AI, which is to say, like, 2015, the way we taught computers to do this was through something called a Recurrent Neural Network, or an RNN. The "recurrent" part just means the computer looks at the first word, then the second, then the third, in order. It's like a person reading a book.
+
+The computer would look at "The," and it would update its internal "state" (its little mental notepad) to say, "Okay, we're starting a sentence." Then it would look at "large," and update its notepad to say, "We're starting a sentence about something large." Then "green." Then "slightly damp."
+
+The problem is that the notepad is only so big. By the time the computer gets to the tenth adjective, the fact that the subject was a "frog" has started to smudge. The ink is fading. The computer is so focused on the fact that the thing is "misunderstood" that it forgets what the "thing" actually was.
+
+Computer scientists call this the "vanishing gradient" problem, which is a fancy way of saying "the computer has the short-term memory of a goldfish."
+
+So, you try to fix this. You give the translator a bigger notepad. You tell him to write down the important words in the margin. But then the speech gets longer. Now it's a three-hour manifesto about agricultural subsidies. No matter how big the notepad is, the translator eventually gets overwhelmed. He's spent so much energy trying to remember the beginning of the sentence that he's stopped paying attention to the end.
+
+And then you have a realization.
+
+What if, instead of trying to remember the speech as it happens, you just... wait?
+
+What if you wait for the delegate to finish the entire paragraph, get the full transcript, and lay it out flat on a big table in front of you?
+
+Now, you don't have to "remember" anything. If you're translating the verb "sat" and you want to know who did the sitting, you don't have to consult your fading memory. You just move your eyes six inches to the left and look at the word "frog." It's right there. It hasn't moved.
+
+You aren't "processing" the sentence anymore. You are attending to it. You are looking at the whole thing at once and drawing lines between the words that relate to each other. You draw a line from "frog" to "sat." You draw a line from "green" to "frog." You draw a line from "aggressive" to "frog."
+
+And because you have the whole transcript on the table, you can do this for every word simultaneously. You don't have to wait for "The" to finish before you look at "frog." You can just have a thousand tiny versions of yourself all looking at the table at once, each one responsible for finding the "friends" of a different word.
+
+So anyway, that is basically how Google decided to stop treating language like a stream and start treating it like a giant, interconnected pile of math.
+
+In 2017, a group of researchers at Google published a paper called "Attention Is All You Need." It is one of those titles that is either incredibly arrogant or incredibly accurate, and in this case, it turned out to be both.
+
+They introduced the "Transformer." The name sounds like a Saturday morning cartoon, but the logic is pure efficiency. The core idea was to ditch the "reading in order" part (the recurrence) and replace it entirely with "looking at everything at once" (the attention).
+
+The paper says:
+
+"The dominant sequence transduction models are based on complex recurrent or convolutional neural networks... We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely."
+
+"Dispensing with recurrence entirely" is a very polite way of saying "we realized that trying to remember things in order is for suckers."
+
+If you're a computer, "in order" is slow. If you have to process word #1 before you can look at word #2, you can only work as fast as a single processor can go. But if you can look at the whole sentence at once, you can throw a ten-thousand-dollar GPU at it and have it calculate all the relationships in parallel. It's the difference between a guy building a car by himself and a massive assembly line where everyone installs one bolt at the same time.
+
+But how does the computer actually "look" at the words? It doesn't have eyes. It has matrices.
+
+The Transformer uses a system of "Queries," "Keys," and "Values." This is a bit of terminology borrowed from retrieval systems, like how a database works, but applied to human language.
+
+Think of it like this:
+
+The Query: Every word in the sentence asks a question. The word "sat" says, "I am a verb. Who is the subject that might be doing me?"
+
+The Key: Every word also has a label describing what it has to offer. The word "frog" says, "I am a noun, and I am an animal that is capable of sitting."
+
+The Value: This is the actual "meaning" of the word that gets passed along once a match is made.
+
+The computer does a bunch of high-speed dating for words. It multiplies the Query of "sat" by the Key of every other word in the sentence. When it hits the Key for "frog," it gets a high score. It "pays attention" to the frog.
+
+The paper describes this with a formula that looks like this:
+
+$$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+
+This is the kind of math that looks intimidating until you realize it's basically just a way of saying: "Figure out which words like each other, and then give those words more weight."
+
+If you're the word "bank," and the word "river" is in the sentence, your Query for "context" is going to hit the Key for "river" and realize you are talking about geography. If the word "money" is there, you realize you are talking about finance. You don't need a dictionary; you just need to see who your neighbors are.
+
+But it gets weirder. The researchers realized that one "look" at the sentence isn't enough. Maybe one version of you is looking for grammatical relationships (subject-verb). Maybe another version of you is looking for pronouns (who does "it" refer to?). Maybe a third version is just a sucker for adjectives.
+
+So they created "Multi-Head Attention."
+
+"Multi-head attention allows the model to jointly attend to information from different representation subspaces at different positions."
+
+In plain English: "We have eight different guys looking at the same sentence, and each one is looking for a different kind of vibe."
+
+One guy is the grammar guy. One guy is the context guy. One guy is the "is this a sarcastic tweet?" guy. They all do their work at the same time, they all write down their findings, and then they combine their notes.
+
+The result is a system that is incredibly good at understanding that the "it" in "The trophy didn't fit into the brown suitcase because it was too large" refers to the trophy, but the "it" in "The trophy didn't fit into the brown suitcase because it was too small" refers to the suitcase.
+
+To a human, that's "common sense." To a Transformer, it's just a Query hitting a Key with a slightly higher statistical probability.
+
+There is something a little bit cynical about this?
+
+For decades, AI researchers tried to build "symbolic" AI. They tried to teach computers the rules of logic. They tried to explain that a "frog" is a "living thing" and that "sitting" is an "action." They tried to build a brain that thought like a philosopher.
+
+The Transformer basically says: "Forget all that. Just give me 40 gigabytes of internet text and a massive spreadsheet. I will calculate the probability that the word 'frog' appears near the word 'pond' and I will 'understand' language better than any philosopher ever could."
+
+And it worked! It worked so well that it broke everything else.
+
+Because the Transformer "dispenses with recurrence," you can scale it. You can't really "scale" a guy reading a book, he can only read so fast. But you can scale a machine that looks at a billion pages at once.
+
+You take the Transformer, you stack it on top of itself like a skyscraper (the paper suggests 6 layers; GPT-4 uses... many more), you feed it the entire internet, and suddenly you don't just have a translator. You have something that can write poetry, pass the bar exam, and explain why a joke is funny.
+
+It's not "thinking" in any way we recognize. It's just paying very, very close attention to everything, all the time.
+
+The irony of "Attention Is All You Need" is that the "Attention" in the title isn't a human quality. It's a mathematical operation. The machine isn't "paying attention" because it's interested; it's paying attention because it's the most efficient way to turn a huge amount of data into a predictable next step.
+
+It turns out that if you have enough data and enough "heads" looking at it, "predicting the next word" and "understanding the world" become indistinguishable from each other.
+
+Which is a bit of a weird realization for the humans?
+
+We like to think our language is a reflection of our deep, internal souls. But the Transformer suggests it might just be a very complex set of statistical weights. We think we're being profound, but we're really just satisfying a very high-dimensional Query.
+
+Anyway, that's the world we live in now. We built a machine that doesn't have a memory, it just has a very large table and a lot of very fast eyes.
