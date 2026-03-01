@@ -1,0 +1,67 @@
+---
+title: Recursive Language Models
+author: Kiyotaka
+date: 03/01/2026
+draft: false
+description: A basic introduction to Recursive Language Models.
+---
+
+Suppose you are a junior associate at a large corporate law firm. One day, a senior partner walks into your office and drops a cardboard box containing three million pages of printed emails on your desk. He says, "Somewhere in here, the CEO of our client explicitly promised to buy a lemonade stand on Tuesday. Find it and tell me what the weather was."
+
+You have a few options for how to handle this.
+
+Option 1 is to sit down and read all three million pages, starting at page one. You read and you read, and by page two million your brain is leaking out of your ears. You have forgotten your own name, let alone the weather on Tuesday. When the partner comes back, you just stare at him blankly and mumble something about a newsletter. This is what computer scientists call "context rot."
+
+Option 2 is to hire a librarian. You give the librarian the box, and you say, "Look for pages with the words 'lemonade' and 'weather'." The librarian goes away and comes back with fifty pages. You read those fifty pages. This is much faster, but unfortunately, the CEO didn't use the word "lemonade," he used the phrase "citrus-based asset acquisition." The librarian missed it, and you get fired. This is what computer scientists call "Retrieval-Augmented Generation," or RAG.
+
+Option 3 is to realize that you are an associate at a law firm and you have a budget. So you rent a warehouse, put the box of emails in the middle, and hire one thousand paralegals. You do not read the emails yourself. Instead, you write a memo. The memo says: "Take a stack of emails. Read them. If you see anything about buying a beverage business, summarize it and send it back to me. If it's complicated, hire another paralegal to help you." You sit at your desk, reading the summaries your paralegals send you, synthesizing them, and eventually you figure out the answer.
+
+You are no longer a reader; you are a manager of an environment that contains the reading material.
+
+So anyway, that is basically what a group of researchers from MIT just did to large language models.
+
+In the AI industry, there has been a massive arms race over the last few years to increase the "context window" of large language models. The context window is how much text the AI can hold in its short-term memory at once. A few years ago, it was a few pages. Then it was a whole book. Now, companies like Google and Anthropic offer models with context windows of a million tokens or more. You can literally drag and drop the entire codebase of a software project, or the entire Harry Potter series, into the prompt box and say "tell me about this."
+
+But there is a catch, which is that shoving two million tokens into a neural network does not mean the neural network is actually going to understand them. It turns out that if you give an AI a massive wall of text, it gets distracted. Its performance degrades. It suffers from "context rot." It misses the subtle details in the middle of the document, possibly because it is doing massive matrix multiplications over billions of parameters and the signal just gets drowned out by the noise?
+
+Also, it is incredibly expensive. Every time you ask the AI a follow-up question, the computer has to re-process all two million tokens. That's bad.
+
+So a team of researchers—Alex L. Zhang, Tim Kraska, and Omar Khattab—recently published a paper titled "Recursive Language Models." They looked at the problem of massive context windows and decided that the entire approach was wrong.
+
+Their insight is that if you have a ten-million-word document, you should not feed it into the AI's brain. You should feed it into a Python environment, and let the AI write code to look at it.
+
+From the paper's abstract:
+
+> We study allowing large language models (LLMs) to process arbitrarily long prompts through the lens of inference-time scaling. We propose Recursive Language Models (RLMs), a general inference paradigm that treats long prompts as part of an external environment and allows the LLM to programmatically examine, decompose, and recursively call itself over snippets of the prompt.
+
+Here is how it works. You give the RLM a massive, ten-million-token prompt. But the AI doesn't see the text. Instead, the AI wakes up in a Python REPL (a coding sandbox), and the text is stored as a variable called `prompt`.
+
+The AI looks at the user's question, and it thinks, "Hmm, I need to find information about a citrus-based asset acquisition." So it writes a Python script to chop the `prompt` variable into 100 smaller chunks.
+
+But it still can't read all 100 chunks itself. So it uses a special function to *recursively call a clone of itself*. It writes a script that effectively says: "Hey, mini-LLM, look at chunk number 42. Tell me if it mentions anything about buying a beverage business."
+
+The clone wakes up, reads the short snippet—which is small enough that the clone doesn't suffer from context rot—and returns a summary. The main AI collects all the summaries from all the clones, reads them, and synthesizes the final answer.
+
+It seems hard to believe that no one built this natively into the models before, because it is exactly how humans handle large amounts of information? You do not memorize the encyclopedia. You look at the index, you flip to the page, you read the paragraph, and if it's too dense, you ask an expert.
+
+By treating the prompt as an external environment rather than an internal memory state, RLMs achieve a few magical things.
+
+First, they completely shatter the context limit. If your base model can only read 100,000 tokens, but you wrap it in an RLM scaffold, it can suddenly process 10 million tokens. The model just writes code to iterate over the data in 100,000-token chunks.
+
+Second, it cures context rot. Because the neural network is only ever reading small, highly relevant snippets at any given moment, its reasoning remains sharp. The researchers found that "RLMs can successfully process inputs up to two orders of magnitude beyond model context windows and, even for shorter prompts, dramatically outperform the quality of vanilla frontier LLMs."
+
+Third, and perhaps most importantly for the people paying the cloud computing bills, it is surprisingly cheap.
+
+If you put 10 million tokens into a standard LLM, you pay for 10 million tokens of compute. If you ask it to rethink its answer, you pay for 10 million tokens again. But with an RLM, the main model only sees a short prompt and some Python code. The clones only see the small snippets they are assigned. The total number of tokens processed by the neural network is actually *lower* than if you had just shoved the whole document in at once. You are trading brute-force memory for inference-time reasoning.
+
+Here is how the researchers describe the core philosophy:
+
+> The key insight is that arbitrarily long user prompts should not be fed into the neural network (e.g., Transformer) directly but should instead be treated as part of the environment that the LLM is tasked to symbolically and recursively interact with.
+
+This is a profound shift in how we think about AI. For the last few years, the entire industry has been obsessed with making the AI's "brain" bigger. Bigger context windows, bigger parameter counts, bigger clusters of GPUs.
+
+But a brain can only get so big before it becomes an inefficient way to store data. At some point, you have to stop trying to memorize the library, and start learning how to use the card catalog.
+
+The RLM approach effectively turns the AI from a very smart person with an impossibly huge photographic memory into a very smart manager with a limitless budget for interns. It turns out that the manager is much better at their job, less likely to hallucinate, and cheaper to operate.
+
+You spend years assuming that the path to Artificial General Intelligence requires building a model that can swallow the entire internet in a single gulp, and then one day you realize that sometimes, the smartest thing you can do is just write a Python script and delegate the reading.

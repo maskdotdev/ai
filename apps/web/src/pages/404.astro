@@ -1,0 +1,16 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { Button } from '@/components/button'
+import { Container } from '@/components/container'
+---
+
+<BaseLayout title="Page not found - Kiyotaka" description="Sorry, we couldn't find that page.">
+  <Container className="flex h-full items-center pt-16 sm:pt-32">
+    <div class="flex flex-col items-center">
+      <p class="text-base font-light text-neutral-600">404</p>
+      <h1 class="mt-4 font-serif text-4xl tracking-tight text-white sm:text-5xl">Page not found</h1>
+      <p class="mt-4 text-base font-light text-neutral-400">Sorry, we couldn&apos;t find the page you&apos;re looking for.</p>
+      <Button href="/" variant="secondary" className="mt-4">Go back home</Button>
+    </div>
+  </Container>
+</BaseLayout>

@@ -1,5 +1,10 @@
-export function formatDate(dateString: string) {
-  return new Date(`${dateString}T00:00:00Z`).toLocaleDateString('en-US', {
+export function formatDate(value: string | Date) {
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value.includes('T') ? value : `${value}T00:00:00Z`)
+
+  return date.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

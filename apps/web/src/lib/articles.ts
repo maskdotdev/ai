@@ -1,4 +1,6 @@
-import glob from 'fast-glob'
+import { getCollection } from 'astro:content'
+
+import { getReadingTimeMinutes } from '@/lib/reading-time'
 
 interface Article {
   title: string
@@ -6,38 +8,27 @@ interface Article {
   author: string
   date: string
   draft?: boolean
+  readingTimeMinutes: number
 }
 
 export interface ArticleWithSlug extends Article {
   slug: string
 }
 
-async function importArticle(
-  articleFilename: string,
-): Promise<ArticleWithSlug> {
-  const { article } = (await import(`../app/articles/${articleFilename}`)) as {
-    default: React.ComponentType
-    article: Article
-  }
-
-  return {
-    slug: articleFilename.replace(/(\/page)?\.mdx$/, ''),
-    ...article,
-  }
-}
-
 export async function getAllArticles(
-  includeDrafts = process.env.NODE_ENV === 'development',
-) {
-  const articleFilenames = await glob('*/page.mdx', {
-    cwd: './src/app/articles',
-  })
+  includeDrafts = import.meta.env.DEV,
+): Promise<ArticleWithSlug[]> {
+  const entries = await getCollection('articles')
 
-  const articles = await Promise.all(articleFilenames.map(importArticle))
+  const articles: ArticleWithSlug[] = entries
+    .map((entry) => ({
+      slug: entry.slug,
+      ...entry.data,
+      date: entry.data.date.toISOString().slice(0, 10),
+      readingTimeMinutes: getReadingTimeMinutes(entry.body),
+    }))
+    .filter((article) => includeDrafts || !article.draft)
+    .sort((a, z) => +new Date(z.date) - +new Date(a.date))
 
-  const filteredArticles = includeDrafts
-    ? articles
-    : articles.filter((article) => !article.draft)
-
-  return filteredArticles.sort((a, z) => +new Date(z.date) - +new Date(a.date))
+  return articles
 }

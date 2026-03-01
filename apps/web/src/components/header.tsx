@@ -1,10 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useTheme } from 'next-themes'
 import {
   Popover,
   PopoverButton,
@@ -85,7 +81,7 @@ function MobileNavItem({
 }) {
   return (
     <li>
-      <PopoverButton as={Link} href={href} className="block py-2">
+      <PopoverButton as="a" href={href} className="block py-2">
         {children}
       </PopoverButton>
     </li>
@@ -97,31 +93,30 @@ function MobileNavigation(
 ) {
   return (
     <Popover {...props}>
-      <PopoverButton className="group flex items-center rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-zinc-800 ring-1 shadow-lg shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10 dark:hover:ring-white/20">
+      <PopoverButton className="group flex items-center rounded-full px-4 py-2 text-sm font-light tracking-wide text-neutral-400 ring-1 ring-white/5 backdrop-blur-sm transition hover:text-white hover:ring-white/10">
         Menu
-        <ChevronDownIcon className="ml-3 h-auto w-2 stroke-zinc-500 group-hover:stroke-zinc-700 dark:group-hover:stroke-zinc-400" />
+        <ChevronDownIcon className="ml-2 h-auto w-2 stroke-neutral-500 group-hover:stroke-white" />
       </PopoverButton>
       <PopoverBackdrop
         transition
-        className="fixed inset-0 z-50 bg-zinc-800/40 backdrop-blur-xs duration-150 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-black/80"
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm duration-150 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in"
       />
       <PopoverPanel
         focus
         transition
-        className="fixed inset-x-4 top-8 z-50 origin-top rounded-3xl bg-white p-8 ring-1 ring-zinc-900/5 duration-150 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:ring-zinc-800"
+        className="fixed inset-x-4 top-8 z-50 origin-top rounded-lg bg-neutral-900 p-8 ring-1 ring-white/10 duration-150 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in"
       >
         <div className="flex flex-row-reverse items-center justify-between">
           <PopoverButton aria-label="Close menu" className="-m-1 p-1">
-            <CloseIcon className="h-6 w-6 text-zinc-500 dark:text-zinc-400" />
+            <CloseIcon className="h-6 w-6 text-neutral-500" />
           </PopoverButton>
-          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          <h2 className="text-xs font-light tracking-widest text-neutral-500 uppercase">
             Navigation
           </h2>
         </div>
         <nav className="mt-6">
-          <ul className="-my-2 divide-y divide-zinc-100 text-base text-zinc-800 dark:divide-zinc-100/5 dark:text-zinc-300">
+          <ul className="-my-2 divide-y divide-white/5 text-sm text-neutral-300">
             <MobileNavItem href="/articles">Articles</MobileNavItem>
-            {/* <MobileNavItem href="/projects">Projects</MobileNavItem> */}
             <MobileNavItem href="/algorithms">Algorithms</MobileNavItem>
           </ul>
         </nav>
@@ -133,62 +128,90 @@ function MobileNavigation(
 function NavItem({
   href,
   children,
+  pathname,
 }: {
   href: string
   children: React.ReactNode
+  pathname: string
 }) {
-  const isActive = usePathname() === href
+  const isActive = pathname === href
 
   return (
     <li>
-      <Link
+      <a
         href={href}
         className={clsx(
-          'relative block px-3 py-2 transition',
-          isActive
-            ? 'text-teal-500 dark:text-teal-400'
-            : 'hover:text-teal-500 dark:hover:text-teal-400',
+          'relative block px-4 py-2 text-sm tracking-wide transition-colors duration-200',
+          isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-200',
         )}
       >
         {children}
         {isActive && (
-          <span className="absolute inset-x-1 -bottom-px h-px bg-linear-to-r from-teal-500/0 via-teal-500/40 to-teal-500/0 dark:from-teal-400/0 dark:via-teal-400/40 dark:to-teal-400/0" />
+          <span className="absolute inset-x-2 -bottom-px h-px bg-white/40" />
         )}
-      </Link>
+      </a>
     </li>
   )
 }
 
-function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
+function DesktopNavigation({
+  pathname,
+  ...props
+}: React.ComponentPropsWithoutRef<'nav'> & { pathname: string }) {
   return (
     <nav {...props}>
-      <ul className="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 ring-1 shadow-lg shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
-        <NavItem href="/articles">Articles</NavItem>
-        {/* <NavItem href="/projects">Projects</NavItem> */}
-        <NavItem href="/algorithms">Algorithms</NavItem>
+      <ul className="flex text-sm font-light">
+        <NavItem href="/articles" pathname={pathname}>
+          Articles
+        </NavItem>
+        <NavItem href="/algorithms" pathname={pathname}>
+          Algorithms
+        </NavItem>
       </ul>
     </nav>
   )
 }
 
+function getResolvedTheme() {
+  if (typeof window === 'undefined') return 'dark'
+
+  const saved = window.localStorage.getItem('theme')
+  if (saved === 'light' || saved === 'dark') return saved
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
+function applyTheme(theme: 'light' | 'dark') {
+  document.documentElement.classList.toggle('dark', theme === 'dark')
+  window.localStorage.setItem('theme', theme)
+}
+
 function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const otherTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
-  const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
 
   useEffect(() => {
-    setMounted(true)
+    const resolved = getResolvedTheme()
+    setTheme(resolved)
+    applyTheme(resolved)
   }, [])
+
+  const otherTheme = theme === 'dark' ? 'light' : 'dark'
 
   return (
     <button
       type="button"
-      aria-label={mounted ? `Switch to ${otherTheme} theme` : 'Toggle theme'}
-      className="group rounded-full bg-white/90 px-3 py-2 ring-1 shadow-lg shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm transition dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20"
-      onClick={() => setTheme(otherTheme)}
+      aria-label={`Switch to ${otherTheme} theme`}
+      className="group p-2 text-neutral-500 transition-colors hover:text-white"
+      onClick={() => {
+        const nextTheme = theme === 'dark' ? 'light' : 'dark'
+        setTheme(nextTheme)
+        applyTheme(nextTheme)
+      }}
     >
-      <SunIcon className="h-6 w-6 fill-zinc-100 stroke-zinc-500 transition group-hover:fill-zinc-200 group-hover:stroke-zinc-700 dark:hidden [@media(prefers-color-scheme:dark)]:fill-teal-50 [@media(prefers-color-scheme:dark)]:stroke-teal-500 [@media(prefers-color-scheme:dark)]:group-hover:fill-teal-50 [@media(prefers-color-scheme:dark)]:group-hover:stroke-teal-600" />
-      <MoonIcon className="hidden h-6 w-6 fill-zinc-700 stroke-zinc-500 transition dark:block [@media_not_(prefers-color-scheme:dark)]:fill-teal-400/10 [@media_not_(prefers-color-scheme:dark)]:stroke-teal-500 [@media(prefers-color-scheme:dark)]:group-hover:stroke-zinc-400" />
+      <SunIcon className="h-5 w-5 fill-neutral-700 stroke-neutral-500 transition group-hover:stroke-white dark:hidden" />
+      <MoonIcon className="hidden h-5 w-5 fill-neutral-700 stroke-neutral-500 transition group-hover:stroke-white dark:block" />
     </button>
   )
 }
@@ -197,18 +220,17 @@ function SearchButton() {
   return (
     <button
       type="button"
-      className="group ml-4 rounded-full bg-white/90 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 shadow-lg shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm transition dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10 dark:hover:ring-white/20"
+      className="group ml-2 p-2 text-xs font-light tracking-widest text-neutral-500 transition-colors hover:text-white"
       onClick={() => {
         const event = new KeyboardEvent('keydown', {
           key: 'k',
-          metaKey: true
+          metaKey: true,
         })
         document.dispatchEvent(event)
       }}
     >
-      <span className="flex items-center">
-        <span className="text-sm font-medium">⌘</span>
-        <span className="ml-1">K</span>
+      <span className="flex items-center gap-1">
+        <span>&#8984;K</span>
       </span>
       <span className="sr-only">Search</span>
     </button>
@@ -229,7 +251,7 @@ function AvatarContainer({
     <div
       className={clsx(
         className,
-        'h-10 w-10 rounded-full bg-white/90 p-0.5 ring-1 shadow-lg shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:ring-white/10',
+        'h-10 w-10 rounded-full p-0.5 ring-1 ring-white/10',
       )}
       {...props}
     />
@@ -240,36 +262,38 @@ function Avatar({
   large = false,
   className,
   ...props
-}: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href'> & {
+}: Omit<React.ComponentPropsWithoutRef<'a'>, 'href'> & {
   large?: boolean
 }) {
   const kiyotaka = 'https://images.mask.dev/kiyotaka.jpg'
 
   return (
-    <Link
+    <a
       href="/"
       aria-label="Home"
       className={clsx(className, 'pointer-events-auto')}
       {...props}
     >
-      <Image
+      <img
         src={kiyotaka}
         alt=""
-        width={16}
-        height={16}
-        sizes={large ? '4rem' : '2.25rem'}
         className={clsx(
-          'rounded-full bg-zinc-100 object-cover dark:bg-zinc-800',
+          'rounded-full bg-neutral-800 object-cover grayscale',
           large ? 'h-16 w-16' : 'h-9 w-9',
         )}
-        priority
       />
-    </Link>
+    </a>
   )
 }
 
 export function Header() {
-  const isHomePage = usePathname() === '/'
+  const [pathname, setPathname] = useState('/')
+
+  useEffect(() => {
+    setPathname(window.location.pathname)
+  }, [])
+
+  const isHomePage = pathname === '/'
 
   const headerRef = useRef<React.ElementRef<'div'>>(null)
   const avatarRef = useRef<React.ElementRef<'div'>>(null)
@@ -447,7 +471,10 @@ export function Header() {
               </div>
               <div className="flex flex-1 justify-end md:justify-center">
                 <MobileNavigation className="pointer-events-auto md:hidden" />
-                <DesktopNavigation className="pointer-events-auto hidden md:block" />
+                <DesktopNavigation
+                  className="pointer-events-auto hidden md:block"
+                  pathname={pathname}
+                />
               </div>
               <div className="flex justify-end md:flex-1">
                 <div className="pointer-events-auto flex items-center">

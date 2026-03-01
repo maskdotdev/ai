@@ -1,0 +1,42 @@
+---
+import { Container } from '@/components/container'
+import { Prose } from '@/components/prose'
+import { formatDate } from '@/lib/format-date'
+
+interface Props {
+  title: string
+  date: string | Date
+  readingTimeMinutes?: number
+}
+
+const { title, date, readingTimeMinutes } = Astro.props
+---
+
+<Container className="mt-16 lg:mt-32">
+  <div class="xl:relative">
+    <div class="mx-auto max-w-2xl">
+      <article>
+        <header class="flex flex-col">
+          <h1 class="heading-glow mt-6 font-serif text-4xl tracking-tight text-white sm:text-5xl">
+            {title}
+          </h1>
+          <div class="order-first flex items-center gap-3 text-sm text-neutral-600">
+            <time datetime={date instanceof Date ? date.toISOString().slice(0, 10) : date} class="flex items-center">
+              <span class="h-4 w-0.5 rounded-full bg-gradient-to-b from-neutral-500 to-neutral-700"></span>
+              <span class="ml-3">{formatDate(date)}</span>
+            </time>
+            {readingTimeMinutes && (
+              <span class="rounded-full bg-white/5 px-3 py-1 text-[11px] tracking-wide text-neutral-400 ring-1 ring-white/10">
+                {readingTimeMinutes} min read
+              </span>
+            )}
+          </div>
+          <div class="gradient-line mt-8 w-16"></div>
+        </header>
+        <Prose className="mt-8" data-mdx-content>
+          <slot />
+        </Prose>
+      </article>
+    </div>
+  </div>
+</Container>

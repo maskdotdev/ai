@@ -1,0 +1,22 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { Container } from '@/components/container'
+import { AlgorithmTerminal } from '@/components/AlgorithmTerminal'
+---
+
+<BaseLayout title="Algorithms - Kiyotaka" description="Interactive visualizations of algorithms.">
+  <Container className="mt-16 lg:mt-32">
+    <div class="xl:relative">
+      <div class="mx-auto max-w-5xl">
+        <h1 class="text-4xl font-bold tracking-tight text-zinc-100 sm:text-5xl">Algorithm Visualizations</h1>
+        <p class="mt-6 text-base text-zinc-400">
+          Interactive visualizations of various algorithms. Use the terminal below to navigate and explore different algorithms.
+          Type <code class="font-mono text-emerald-500 bg-zinc-800/30 px-1.5 py-0.5 rounded">help</code> to see available commands.
+        </p>
+        <div class="mt-8">
+          <AlgorithmTerminal client:load />
+        </div>
+      </div>
+    </div>
+  </Container>
+</BaseLayout>

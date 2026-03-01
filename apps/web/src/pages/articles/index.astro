@@ -1,0 +1,54 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { Card } from '@/components/card'
+import { SimpleLayout } from '@/components/simple-layout'
+import { getAllArticles, type ArticleWithSlug } from '@/lib/articles'
+import { formatDate } from '@/lib/format-date'
+
+const articles = await getAllArticles()
+const publishedCount = articles.filter((article) => !article.draft).length
+---
+
+<BaseLayout
+  title="Articles - Kiyotaka"
+  description="All of my long-form thoughts on software, ai, product design, and more, collected in chronological order."
+>
+  <SimpleLayout
+    title="Writing on software, artificial intelligence, and math."
+    intro="All of my long-form thoughts on software, ai, product design, and more, collected in chronological order."
+  >
+    <div class="md:border-l md:border-white/5 md:pl-6">
+      <p class="mb-8 text-xs tracking-widest text-neutral-600 uppercase">
+        {publishedCount} published article{publishedCount === 1 ? '' : 's'}
+      </p>
+      <div class="flex max-w-3xl flex-col space-y-16">
+        {articles.map((article: ArticleWithSlug) => (
+          <article class="md:grid md:grid-cols-4 md:items-baseline">
+            <Card className="md:col-span-3">
+              <Card.Title href={`/articles/${article.slug}`}>
+                {article.title}
+                {article.draft && (
+                  <span class="ml-2 rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-500 ring-1 ring-white/10">
+                    Draft
+                  </span>
+                )}
+              </Card.Title>
+              <Card.Eyebrow as="time" datetime={article.date} className="md:hidden" decorate>
+                {formatDate(article.date)}
+                <span class="mx-2 text-neutral-700">•</span>
+                <span>{article.readingTimeMinutes} min read</span>
+              </Card.Eyebrow>
+              <Card.Description>{article.description}</Card.Description>
+              <Card.Cta>Read article</Card.Cta>
+            </Card>
+            <Card.Eyebrow as="time" datetime={article.date} className="mt-1 hidden md:block">
+              {formatDate(article.date)}
+              <span class="mx-2 text-neutral-700">•</span>
+              <span>{article.readingTimeMinutes} min read</span>
+            </Card.Eyebrow>
+          </article>
+        ))}
+      </div>
+    </div>
+  </SimpleLayout>
+</BaseLayout>

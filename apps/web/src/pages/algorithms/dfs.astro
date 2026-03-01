@@ -1,0 +1,21 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { Container } from '@/components/container'
+import { DFSVisualization } from '@/components/DFSVisualization'
+---
+
+<BaseLayout title="Depth-First Search - Kiyotaka" description="Interactive DFS visualization.">
+  <Container className="mt-16 lg:mt-32">
+    <div class="xl:relative">
+      <div class="mx-auto max-w-5xl">
+        <h1 class="text-4xl font-bold tracking-tight text-zinc-100 sm:text-5xl">Depth-First Search</h1>
+        <p class="mt-6 text-base text-zinc-400">
+          Depth-First Search (DFS) is a fundamental graph traversal algorithm that explores as far as possible along each branch before backtracking.
+        </p>
+        <div class="mt-8">
+          <DFSVisualization client:load />
+        </div>
+      </div>
+    </div>
+  </Container>
+</BaseLayout>

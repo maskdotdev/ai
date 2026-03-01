@@ -12,10 +12,11 @@ export function SimpleLayout({
   return (
     <Container className="mt-16 sm:mt-32">
       <header className="max-w-2xl">
-        <h1 className="text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
+        <h1 className="heading-glow font-serif text-4xl tracking-tight text-white sm:text-5xl">
           {title}
         </h1>
-        <p className="mt-6 text-base text-zinc-600 dark:text-zinc-400">
+        <div className="gradient-line animate-reveal-line mt-6 w-16" />
+        <p className="mt-6 text-base leading-relaxed font-light text-neutral-500">
           {intro}
         </p>
       </header>

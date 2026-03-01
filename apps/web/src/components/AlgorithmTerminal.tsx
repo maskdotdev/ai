@@ -1,45 +1,46 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { TerminalWindow } from './TerminalWindow';
+import React, { useState, useRef, useEffect } from 'react'
+import { TerminalWindow } from './TerminalWindow'
 
 interface Algorithm {
-  id: string;
-  name: string;
-  description: string;
-  path: string;
-  category: string;
+  id: string
+  name: string
+  description: string
+  path: string
+  category: string
 }
 
 const algorithms: Algorithm[] = [
   {
     id: 'dfs',
     name: 'Depth-First Search',
-    description: 'Graph traversal algorithm that explores as far as possible along each branch before backtracking.',
+    description:
+      'Graph traversal algorithm that explores as far as possible along each branch before backtracking.',
     path: '/algorithms/dfs',
     category: 'graph',
   },
   {
     id: 'bfs',
     name: 'Breadth-First Search',
-    description: 'Graph traversal algorithm that explores all vertices at the present depth before moving on to vertices at the next depth level.',
+    description:
+      'Graph traversal algorithm that explores all vertices at the present depth before moving on to vertices at the next depth level.',
     path: '/algorithms/bfs',
     category: 'graph',
   },
   // Add more algorithms here
-];
+]
 
 const MATRIX_QUOTES = [
-  "Wake up, Neo...",
-  "The Matrix has you...",
-  "Follow the white rabbit.",
-  "Knock, knock, Neo.",
-  "I know kung fu.",
-  "There is no spoon.",
-  "Free your mind.",
-  "Welcome to the desert of the real.",
-  "What is real? How do you define real?",
-  "Unfortunately, no one can be told what the Matrix is. You have to see it for yourself.",
-];
+  'Wake up, Neo...',
+  'The Matrix has you...',
+  'Follow the white rabbit.',
+  'Knock, knock, Neo.',
+  'I know kung fu.',
+  'There is no spoon.',
+  'Free your mind.',
+  'Welcome to the desert of the real.',
+  'What is real? How do you define real?',
+  'Unfortunately, no one can be told what the Matrix is. You have to see it for yourself.',
+]
 
 const INITIAL_MESSAGE = `
 Matrix v4.2.1 - Algorithm Visualization System
@@ -47,39 +48,38 @@ Matrix v4.2.1 - Algorithm Visualization System
 
 Type 'help' for available commands.
 Type 'matrix' for a surprise...
-`;
+`
 
 export function AlgorithmTerminal() {
-  const router = useRouter();
-  const [command, setCommand] = useState('');
-  const [history, setHistory] = useState<string[]>([INITIAL_MESSAGE]);
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [command, setCommand] = useState('')
+  const [history, setHistory] = useState<string[]>([INITIAL_MESSAGE])
+  const [commandHistory, setCommandHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const addToHistory = (text: string) => {
-    setHistory(prev => [...prev, text]);
-  };
+    setHistory((prev) => [...prev, text])
+  }
 
   // Auto-scroll to bottom when history changes
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [history]);
+  }, [history])
 
   const handleCommand = (cmd: string) => {
     // Add command to history
     if (cmd.trim()) {
-      setCommandHistory(prev => [...prev, cmd]);
-      setHistoryIndex(-1);
+      setCommandHistory((prev) => [...prev, cmd])
+      setHistoryIndex(-1)
     }
 
-    addToHistory(`> ${cmd}`);
+    addToHistory(`> ${cmd}`)
 
-    const parts = cmd.trim().toLowerCase().split(' ');
-    const mainCommand = parts[0];
+    const parts = cmd.trim().toLowerCase().split(' ')
+    const mainCommand = parts[0]
 
     switch (mainCommand) {
       case 'help':
@@ -91,46 +91,48 @@ cd <algorithm>        Navigate to an algorithm
 clear                 Clear terminal
 help                  Show this help message
 cat <algorithm>       Show algorithm details
-`);
-        break;
+`)
+        break
 
       case 'ls':
-        const category = parts[1];
+        const category = parts[1]
         const filteredAlgos = category
-          ? algorithms.filter(a => a.category === category)
-          : algorithms;
+          ? algorithms.filter((a) => a.category === category)
+          : algorithms
 
-        addToHistory('Available algorithms:');
-        addToHistory('===================');
-        filteredAlgos.forEach(algo => {
-          addToHistory(`${algo.id.padEnd(15)} - ${algo.name}`);
-        });
-        break;
+        addToHistory('Available algorithms:')
+        addToHistory('===================')
+        filteredAlgos.forEach((algo) => {
+          addToHistory(`${algo.id.padEnd(15)} - ${algo.name}`)
+        })
+        break
 
       case 'cd':
-        const target = parts[1];
+        const target = parts[1]
         if (!target) {
-          addToHistory('Error: Please specify an algorithm');
-          break;
+          addToHistory('Error: Please specify an algorithm')
+          break
         }
 
-        const algo = algorithms.find(a => a.id === target);
+        const algo = algorithms.find((a) => a.id === target)
         if (algo) {
-          addToHistory(`Navigating to ${algo.name}...`);
-          setTimeout(() => router.push(algo.path), 500);
+          addToHistory(`Navigating to ${algo.name}...`)
+          setTimeout(() => {
+            window.location.href = algo.path
+          }, 500)
         } else {
-          addToHistory(`Error: Algorithm '${target}' not found`);
+          addToHistory(`Error: Algorithm '${target}' not found`)
         }
-        break;
+        break
 
       case 'cat':
-        const algoId = parts[1];
+        const algoId = parts[1]
         if (!algoId) {
-          addToHistory('Error: Please specify an algorithm');
-          break;
+          addToHistory('Error: Please specify an algorithm')
+          break
         }
 
-        const algoDetails = algorithms.find(a => a.id === algoId);
+        const algoDetails = algorithms.find((a) => a.id === algoId)
         if (algoDetails) {
           addToHistory(`
 ${algoDetails.name}
@@ -140,31 +142,34 @@ Path: ${algoDetails.path}
 
 Description:
 ${algoDetails.description}
-`);
+`)
         } else {
-          addToHistory(`Error: Algorithm '${algoId}' not found`);
+          addToHistory(`Error: Algorithm '${algoId}' not found`)
         }
-        break;
+        break
 
       case 'clear':
-        setHistory([INITIAL_MESSAGE]);
-        break;
+        setHistory([INITIAL_MESSAGE])
+        break
 
       case 'matrix':
         const randomQuotes = [...MATRIX_QUOTES]
           .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
+          .slice(0, 3)
 
         // Add matrix quotes with delays
-        addToHistory('Initiating the Matrix sequence...');
+        addToHistory('Initiating the Matrix sequence...')
         setTimeout(() => {
           randomQuotes.forEach((quote, index) => {
-            setTimeout(() => {
-              addToHistory(`\n${quote}`);
-            }, (index + 1) * 1500);
-          });
-        }, 1000);
-        break;
+            setTimeout(
+              () => {
+                addToHistory(`\n${quote}`)
+              },
+              (index + 1) * 1500,
+            )
+          })
+        }, 1000)
+        break
 
       case 'redpill':
         addToHistory(`
@@ -175,15 +180,17 @@ You take the blue pill - the story ends, you wake up in your bed and believe wha
 You take the red pill - you stay in Wonderland and I show you how deep the rabbit hole goes.
 
 Type 'bluepill' or 'redpill' to choose...
-`);
-        break;
+`)
+        break
 
       case 'bluepill':
-        addToHistory('\nThe story ends. Wake up in your bed.\n*Terminal shutting down*');
+        addToHistory(
+          '\nThe story ends. Wake up in your bed.\n*Terminal shutting down*',
+        )
         setTimeout(() => {
-          setHistory([INITIAL_MESSAGE]);
-        }, 3000);
-        break;
+          setHistory([INITIAL_MESSAGE])
+        }, 3000)
+        break
 
       case 'rabbit':
         addToHistory(`
@@ -204,8 +211,8 @@ Type 'bluepill' or 'redpill' to choose...
 ⠀⠀⠀⠀⠀⠈⠉⠛⠛⠛⠛⠉⠀⠀⠀⠀⠀⠈⠉⠛⠛⠛⠛⠋⠁⠀⠀⠀⠀⠀
 
 Follow the white rabbit...
-`);
-        break;
+`)
+        break
 
       case 'spoon':
         addToHistory(`
@@ -216,56 +223,65 @@ There is no spoon.
 
 Then you'll see that it is not the spoon that bends,
 it is only yourself.
-`);
-        break;
+`)
+        break
 
       default:
         if (cmd.trim()) {
-          addToHistory(`Command not found: ${mainCommand}`);
-          addToHistory('Type "help" for available commands');
+          addToHistory(`Command not found: ${mainCommand}`)
+          addToHistory('Type "help" for available commands')
         }
     }
-  };
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleCommand(command);
-      setCommand('');
+      handleCommand(command)
+      setCommand('')
     } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
+      e.preventDefault()
       if (historyIndex < commandHistory.length - 1) {
-        const newIndex = historyIndex + 1;
-        setHistoryIndex(newIndex);
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex]);
+        const newIndex = historyIndex + 1
+        setHistoryIndex(newIndex)
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex])
       }
     } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
+      e.preventDefault()
       if (historyIndex > 0) {
-        const newIndex = historyIndex - 1;
-        setHistoryIndex(newIndex);
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex]);
+        const newIndex = historyIndex - 1
+        setHistoryIndex(newIndex)
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex])
       } else if (historyIndex === 0) {
-        setHistoryIndex(-1);
-        setCommand('');
+        setHistoryIndex(-1)
+        setCommand('')
       }
     }
-  };
+  }
 
   const focusInput = () => {
-    inputRef.current?.focus();
-  };
+    inputRef.current?.focus()
+  }
 
   return (
-    <TerminalWindow title="Matrix Terminal" className="min-h-[60vh] overflow-y-auto">
+    <TerminalWindow
+      title="Matrix Terminal"
+      className="min-h-[60vh] overflow-y-auto"
+    >
       {/* <div className="matrix-chars" /> */}
-      <div className="flex flex-col " onClick={focusInput}>
+      <div className="flex flex-col" onClick={focusInput}>
         {/* Terminal output */}
         <div
           ref={scrollRef}
-          className="flex-1 font-mono text-sm matrix-text space-y-1 mb-4 overflow-auto h-[60vh] max-h-[60vh] terminal-scrollbar"
+          className="matrix-text terminal-scrollbar mb-4 h-[60vh] max-h-[60vh] flex-1 space-y-1 overflow-auto font-mono text-sm"
         >
           {history.map((line, i) => (
-            <div key={i} className="whitespace-pre-wrap matrix-decode" data-value={line}>{line}</div>
+            <div
+              key={i}
+              className="matrix-decode whitespace-pre-wrap"
+              data-value={line}
+            >
+              {line}
+            </div>
           ))}
         </div>
 
@@ -278,11 +294,11 @@ it is only yourself.
             value={command}
             onChange={(e) => setCommand(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 ml-2 bg-transparent matrix-text outline-none matrix-cursor"
+            className="matrix-text matrix-cursor ml-2 flex-1 bg-transparent outline-none"
             autoFocus
           />
         </div>
       </div>
     </TerminalWindow>
-  );
-} 
+  )
+}

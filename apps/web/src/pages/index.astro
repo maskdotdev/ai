@@ -1,0 +1,101 @@
+---
+import clsx from 'clsx'
+
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import { Card } from '@/components/card'
+import { Container } from '@/components/container'
+import { getAllArticles, type ArticleWithSlug } from '@/lib/articles'
+import { formatDate } from '@/lib/format-date'
+import { SOCIALS } from '@/lib/constants'
+
+const images = [
+  { src: 'https://images.mask.dev/nn.jpeg', alt: 'Neural network' },
+  { src: 'https://images.mask.dev/robot-coffee.jpeg', alt: 'Robot serving coffee' },
+  { src: 'https://images.mask.dev/computer.jpeg', alt: 'Computer' },
+  { src: 'https://images.mask.dev/coffee.jpeg', alt: 'Coffee' },
+  { src: 'https://images.mask.dev/3d-ai.jpeg', alt: '3D AI' },
+]
+
+const articles = (await getAllArticles()).slice(0, 4)
+const rotations = ['rotate-2', '-rotate-2', 'rotate-2', 'rotate-2', '-rotate-2']
+---
+
+<BaseLayout>
+  <Container className="mt-9">
+    <div class="max-w-2xl">
+      <h1 class="heading-glow animate-fade-in font-serif text-5xl tracking-tight text-white sm:text-6xl">
+        Software, Artificial
+        <br />
+        Intelligence,{' '}
+        <em class="font-serif text-neutral-400 italic">and coffee.</em>
+      </h1>
+      <div class="gradient-line animate-reveal-line mt-8 w-24"></div>
+      <p class="animate-fade-in-delay-1 mt-8 text-base leading-relaxed font-light text-neutral-500">
+        I&apos;m Kiyotaka, a software and AI enthusiast. I&apos;m passionate about
+        building AI systems from the ground up and sharing knowledge with others.
+        I want to help myself and others by understanding the inner workings of
+        artificial intelligence.
+      </p>
+      <div class="animate-fade-in-delay-2 mt-8 flex gap-6">
+        {SOCIALS.map((social) => {
+          const Icon = social.icon
+
+          return (
+            <a class="group -m-1 p-1" href={social.url} aria-label={`Follow on ${social.name}`}>
+              <Icon className="h-5 w-5 fill-neutral-600 transition duration-300 group-hover:fill-neutral-200" />
+            </a>
+          )
+        })}
+      </div>
+    </div>
+  </Container>
+
+  <div class="animate-fade-in-delay-3 mt-16 sm:mt-20">
+    <div class="-my-4 flex justify-center gap-5 overflow-hidden py-4 sm:gap-8">
+      {images.map((image, imageIndex) => (
+        <div
+          class={clsx(
+            'photo-frame relative aspect-9/10 w-44 flex-none overflow-hidden rounded-lg bg-neutral-900 ring-1 ring-white/5 sm:w-72 sm:rounded-xl',
+            rotations[imageIndex % rotations.length],
+          )}
+        >
+          <img
+            src={image.src}
+            alt={image.alt}
+            loading={imageIndex === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            class="absolute inset-0 h-full w-full object-cover grayscale transition-all duration-1000 ease-out hover:grayscale-0"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <Container className="mt-24 md:mt-28">
+    <div class="gradient-line mb-16"></div>
+    <div class="mx-auto grid max-w-xl grid-cols-1 gap-y-20 lg:max-w-none lg:grid-cols-2">
+      <div class="animate-fade-in-delay-4 flex flex-col gap-16">
+        {articles.map((article: ArticleWithSlug) => (
+          <Card as="article">
+            <Card.Title href={`/articles/${article.slug}`}>
+              {article.title}
+              {article.draft && (
+                <span class="ml-2 rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-500 ring-1 ring-white/10">
+                  Draft
+                </span>
+              )}
+            </Card.Title>
+            <Card.Eyebrow as="time" datetime={article.date} decorate>
+              {formatDate(article.date)}
+              <span class="mx-2 text-neutral-700">•</span>
+              <span>{article.readingTimeMinutes} min read</span>
+            </Card.Eyebrow>
+            <Card.Description>{article.description}</Card.Description>
+            <Card.Cta>Read article</Card.Cta>
+          </Card>
+        ))}
+      </div>
+      <div class="space-y-10 lg:pl-16 xl:pl-24"></div>
+    </div>
+  </Container>
+</BaseLayout>
