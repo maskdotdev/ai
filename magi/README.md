@@ -70,6 +70,13 @@ Quick login flow (no env required):
 1. Start app: `bun run start`
 2. In the TUI: `/connect`
 
+Session persistence:
+
+- The app persists your last selected auth mode, model, and system instruction.
+- After a successful connection, startup will auto-reconnect on next launch (no manual `/connect` needed in normal cases).
+- State is stored at `~/.local/state/magi/session.json` by default.
+- Override path with `MAGI_STATE_PATH=/custom/path/session.json`.
+
 ## Notes
 
 - `/connect` defaults to Login with Google unless you switch with `/auth ...`.

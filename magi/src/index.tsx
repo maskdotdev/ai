@@ -2,6 +2,9 @@ import { TextAttributes, SyntaxStyle } from "@opentui/core";
 import { render, useKeyboard, useRenderer } from "@opentui/solid";
 import { GoogleGenAI, type Chat, type Content } from "@google/genai";
 import { GoogleAuth } from "google-auth-library";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 import {
   AuthType as GeminiAuthType,
   getAuthTypeFromEnv as getGeminiAuthTypeFromEnv,
@@ -19,6 +22,7 @@ import {
 import {
   For,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
@@ -88,10 +92,26 @@ interface OauthProgressModal {
   url: string | null;
 }
 
+type PersistedAuthMode = "google" | "vertex" | "gemini" | "compute" | "auto";
+
+interface PersistedState {
+  model: string;
+  authMode: PersistedAuthMode;
+  systemInstruction: string;
+  autoReconnect: boolean;
+}
+
 // ─── Config ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = process.env.GENAI_MODEL ?? "gemini-2.5-flash";
 const syntaxStyle = SyntaxStyle.create();
+const PERSISTED_STATE_PATH =
+  process.env.MAGI_STATE_PATH ??
+  join(
+    process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
+    "magi",
+    "session.json",
+  );
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -236,6 +256,85 @@ function authTypeLabel(authType: GeminiAuthType): string {
 
 function getSelectedAuthType(): GeminiAuthType {
   return getGeminiAuthTypeFromEnv() ?? GeminiAuthType.LOGIN_WITH_GOOGLE;
+}
+
+function authTypeToPersistedMode(authType: GeminiAuthType | null): PersistedAuthMode {
+  if (authType === null) return "auto";
+
+  switch (authType) {
+    case GeminiAuthType.LOGIN_WITH_GOOGLE:
+      return "google";
+    case GeminiAuthType.USE_GEMINI:
+      return "gemini";
+    case GeminiAuthType.USE_VERTEX_AI:
+      return "vertex";
+    case GeminiAuthType.COMPUTE_ADC:
+      return "compute";
+    case GeminiAuthType.LEGACY_CLOUD_SHELL:
+      return "compute";
+  }
+}
+
+function persistedModeToAuthType(mode: unknown): GeminiAuthType | null {
+  switch (mode) {
+    case "auto":
+      return null;
+    case "google":
+      return GeminiAuthType.LOGIN_WITH_GOOGLE;
+    case "vertex":
+      return GeminiAuthType.USE_VERTEX_AI;
+    case "gemini":
+      return GeminiAuthType.USE_GEMINI;
+    case "compute":
+      return GeminiAuthType.COMPUTE_ADC;
+    default:
+      return GeminiAuthType.LOGIN_WITH_GOOGLE;
+  }
+}
+
+function loadPersistedState(): PersistedState {
+  try {
+    const raw = readFileSync(PERSISTED_STATE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as Partial<PersistedState>;
+    const model =
+      typeof parsed.model === "string" && parsed.model.trim()
+        ? parsed.model.trim()
+        : DEFAULT_MODEL;
+    const authMode: PersistedAuthMode =
+      parsed.authMode === "google" ||
+      parsed.authMode === "vertex" ||
+      parsed.authMode === "gemini" ||
+      parsed.authMode === "compute" ||
+      parsed.authMode === "auto"
+        ? parsed.authMode
+        : "google";
+    const systemInstruction =
+      typeof parsed.systemInstruction === "string" ? parsed.systemInstruction : "";
+    const autoReconnect = parsed.autoReconnect === true;
+
+    return {
+      model,
+      authMode,
+      systemInstruction,
+      autoReconnect,
+    };
+  } catch {
+    return {
+      model: DEFAULT_MODEL,
+      authMode: "google",
+      systemInstruction: "",
+      autoReconnect: false,
+    };
+  }
+}
+
+function persistState(state: PersistedState): void {
+  try {
+    mkdirSync(dirname(PERSISTED_STATE_PATH), { recursive: true });
+    writeFileSync(PERSISTED_STATE_PATH, JSON.stringify(state, null, 2), "utf8");
+  } catch {
+    // Ignore persistence errors so chat behavior remains unaffected.
+  }
 }
 
 function shouldUseBrowserOAuth(): boolean {
@@ -571,20 +670,24 @@ function ModalCard(props: { title: string; children: any }) {
 function App() {
   let nextId = 1;
   const renderer = useRenderer();
+  const initialState = loadPersistedState();
 
   const [draft, setDraft] = createSignal("");
-  const [model, setModel] = createSignal(DEFAULT_MODEL);
+  const [model, setModel] = createSignal(initialState.model);
   const [status, setStatus] = createSignal("Ready");
   const [replying, setReplying] = createSignal(false);
-  const [systemInstruction, setSystemInstruction] = createSignal("");
+  const [systemInstruction, setSystemInstruction] = createSignal(
+    initialState.systemInstruction,
+  );
   const [messages, setMessages] = createSignal<TranscriptMessage[]>([]);
 
   const [authOverride, setAuthOverride] = createSignal<GeminiAuthType | null>(
-    GeminiAuthType.LOGIN_WITH_GOOGLE,
+    persistedModeToAuthType(initialState.authMode),
   );
   const [geminiApiKeyOverride, setGeminiApiKeyOverride] = createSignal<
     string | null
   >(null);
+  const [autoReconnect, setAutoReconnect] = createSignal(initialState.autoReconnect);
   const [client, setClient] = createSignal<RuntimeClient | null>(null);
   const [chatSession, setChatSession] = createSignal<Chat | null>(null);
   const [oauthGenerator, setOauthGenerator] =
@@ -712,6 +815,7 @@ function App() {
 
       setConnectedBanner(activeClient, replaceTranscript);
       setBootError(null);
+      setAutoReconnect(true);
       setStatus("Ready");
       return true;
     } catch (error) {
@@ -1148,6 +1252,19 @@ function App() {
     });
 
     setWelcomeBanner();
+    if (autoReconnect()) {
+      appendMessage("system", "Restoring previous session...");
+      void connectWithDetectedAuth();
+    }
+  });
+
+  createEffect(() => {
+    persistState({
+      model: model(),
+      authMode: authTypeToPersistedMode(authOverride()),
+      systemInstruction: systemInstruction(),
+      autoReconnect: autoReconnect(),
+    });
   });
 
   return (
