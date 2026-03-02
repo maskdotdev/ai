@@ -96,7 +96,126 @@ const syntaxStyle = SyntaxStyle.create();
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatError(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  const decodeBytes = (value: Uint8Array): string =>
+    new TextDecoder().decode(value).trim();
+
+  const decodeByteString = (value: string): string | null => {
+    let candidate = value.trim();
+    if (candidate.startsWith("[") && candidate.endsWith("]")) {
+      candidate = candidate.slice(1, -1).trim();
+    }
+
+    if (!/^\d+(,\d+)+$/.test(candidate)) return null;
+
+    const bytes = candidate
+      .split(",")
+      .map((part) => Number(part.trim()))
+      .filter((part) => Number.isFinite(part));
+
+    if (
+      bytes.length < 4 ||
+      bytes.some((part) => part < 0 || part > 255 || !Number.isInteger(part))
+    ) {
+      return null;
+    }
+
+    return decodeBytes(Uint8Array.from(bytes));
+  };
+
+  const messageFromPayload = (payload: unknown): string | null => {
+    if (!payload || typeof payload !== "object") return null;
+
+    if (Array.isArray(payload)) {
+      for (const item of payload) {
+        const nested = messageFromPayload(item);
+        if (nested) return nested;
+      }
+      return null;
+    }
+
+    const value = payload as Record<string, unknown>;
+    const directMessage = value.message;
+    if (typeof directMessage === "string" && directMessage.trim()) {
+      return directMessage.trim();
+    }
+
+    const nestedError = value.error;
+    if (typeof nestedError === "string" && nestedError.trim()) {
+      return nestedError.trim();
+    }
+
+    if (nestedError && typeof nestedError === "object") {
+      const nested = nestedError as Record<string, unknown>;
+      const nestedMessage = nested.message;
+      const nestedStatus = nested.status;
+
+      if (
+        typeof nestedMessage === "string" &&
+        nestedMessage.trim() &&
+        typeof nestedStatus === "string" &&
+        nestedStatus.trim()
+      ) {
+        return `${nestedMessage.trim()} (${nestedStatus.trim()})`;
+      }
+
+      if (typeof nestedMessage === "string" && nestedMessage.trim()) {
+        return nestedMessage.trim();
+      }
+    }
+
+    return null;
+  };
+
+  const parseStructuredText = (text: string): string | null => {
+    const decoded = decodeByteString(text) ?? text.trim();
+
+    try {
+      const parsed = JSON.parse(decoded) as unknown;
+      return messageFromPayload(parsed) ?? decoded;
+    } catch {
+      return decoded || null;
+    }
+  };
+
+  const dataToText = (value: unknown): string | null => {
+    if (value instanceof Uint8Array) return parseStructuredText(decodeBytes(value));
+    if (value instanceof ArrayBuffer) {
+      return parseStructuredText(decodeBytes(new Uint8Array(value)));
+    }
+    if (
+      Array.isArray(value) &&
+      value.every((item) => typeof item === "number" && Number.isFinite(item))
+    ) {
+      return parseStructuredText(
+        decodeBytes(Uint8Array.from(value as number[])),
+      );
+    }
+    if (typeof value === "string") return parseStructuredText(value);
+    return null;
+  };
+
+  if (error && typeof error === "object") {
+    const maybeRecord = error as Record<string, unknown>;
+
+    const responseData = (maybeRecord.response as Record<string, unknown> | undefined)
+      ?.data;
+    const decodedResponseData = dataToText(responseData);
+    if (decodedResponseData) return decodedResponseData;
+
+    const decodedData = dataToText(maybeRecord.data);
+    if (decodedData) return decodedData;
+
+    if (error instanceof Error) {
+      const parsedMessage = parseStructuredText(error.message);
+      if (parsedMessage) return parsedMessage;
+      return error.message;
+    }
+  }
+
+  if (typeof error === "string") {
+    return parseStructuredText(error) ?? error;
+  }
+
   return String(error);
 }
 
@@ -122,6 +241,13 @@ function getSelectedAuthType(): GeminiAuthType {
 function shouldUseBrowserOAuth(): boolean {
   if (process.env.NO_BROWSER === "true") return false;
   return process.env.GOOGLE_LOGIN_USE_BROWSER !== "false";
+}
+
+function ensureWindowFetchBridge(): void {
+  const maybeWindow = (globalThis as { window?: { fetch?: typeof fetch } }).window;
+  if (maybeWindow && !maybeWindow.fetch && typeof globalThis.fetch === "function") {
+    maybeWindow.fetch = globalThis.fetch.bind(globalThis);
+  }
 }
 
 function buildClient(
@@ -204,6 +330,7 @@ async function hasAdcCredentials(): Promise<{ ok: boolean; error?: string }> {
 async function createGoogleLoginGenerator(
   sessionId: string,
 ): Promise<GeminiContentGenerator> {
+  ensureWindowFetchBridge();
   const useBrowserOAuth = shouldUseBrowserOAuth();
   const configStub = {
     getProxy: () => process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY,
