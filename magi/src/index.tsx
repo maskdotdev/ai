@@ -585,7 +585,7 @@ function ChatInput(props: {
   };
 
   return (
-    <box flexDirection="column" gap={0}>
+    <box flexDirection="column" gap={0} flexShrink={0}>
       {/* Main input container */}
       <box
         backgroundColor={theme.bgLight}
@@ -1371,35 +1371,25 @@ function App() {
   return (
     <box
       flexDirection="column"
-      flexGrow={1}
+      width="100%"
+      height="100%"
       backgroundColor={theme.bg}
       paddingX={2}
       paddingY={1}
     >
       {/* Header */}
-      <Show when={!isEmptyView()}>
-        <Header />
-      </Show>
+      <Header />
 
       {/* Chat area */}
       <scrollbox
         flexGrow={1}
+        flexShrink={1}
+        minHeight={0}
         stickyScroll
         stickyStart="bottom"
         paddingX={1}
-        justifyContent="flex-end"
       >
-        <Show
-          when={isEmptyView()}
-          fallback={
-            <box flexDirection="column" minHeight="100%">
-              <box flexGrow={1} />
-              <For each={visibleMessages()}>
-                {(message) => <MessageBubble message={message} />}
-              </For>
-            </box>
-          }
-        >
+        <Show when={isEmptyView()}>
           <box
             flexDirection="column"
             minHeight="100%"
@@ -1407,6 +1397,13 @@ function App() {
             alignItems="center"
           >
             <ascii_font text={emptyLogoText()} font="tiny" color={theme.purple} />
+          </box>
+        </Show>
+        <Show when={!isEmptyView()}>
+          <box flexDirection="column">
+            <For each={visibleMessages()}>
+              {(message) => <MessageBubble message={message} />}
+            </For>
           </box>
         </Show>
       </scrollbox>
