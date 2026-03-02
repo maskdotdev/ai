@@ -99,6 +99,7 @@ interface PersistedState {
   authMode: PersistedAuthMode;
   systemInstruction: string;
   autoReconnect: boolean;
+  showSystemMessages: boolean;
 }
 
 // ─── Config ─────────────────────────────────────────────────────────────────
@@ -311,12 +312,14 @@ function loadPersistedState(): PersistedState {
     const systemInstruction =
       typeof parsed.systemInstruction === "string" ? parsed.systemInstruction : "";
     const autoReconnect = parsed.autoReconnect === true;
+    const showSystemMessages = parsed.showSystemMessages === true;
 
     return {
       model,
       authMode,
       systemInstruction,
       autoReconnect,
+      showSystemMessages,
     };
   } catch {
     return {
@@ -324,6 +327,7 @@ function loadPersistedState(): PersistedState {
       authMode: "google",
       systemInstruction: "",
       autoReconnect: false,
+      showSystemMessages: false,
     };
   }
 }
@@ -462,11 +466,11 @@ function modelContent(text: string): Content {
 function roleLabel(role: MessageRole): string {
   switch (role) {
     case "assistant":
-      return "  assistant";
+      return "assistant";
     case "user":
-      return "       you";
+      return "user";
     case "system":
-      return "    system";
+      return "system";
   }
 }
 
@@ -475,57 +479,29 @@ function roleColor(role: MessageRole): string {
     case "assistant":
       return theme.roleAssistant;
     case "user":
-      return theme.roleUser;
+      return theme.textDim;
     case "system":
-      return theme.roleSystem;
+      return theme.textMuted;
   }
 }
 
-function roleIcon(role: MessageRole): string {
+function roleMessageColor(role: MessageRole): string {
   switch (role) {
     case "assistant":
-      return "◆";
+      return theme.text;
     case "user":
-      return "▸";
+      return theme.textDim;
     case "system":
-      return "●";
+      return theme.textMuted;
   }
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
-function Header(props: { modeLabel: string; model: string }) {
+function Header() {
   return (
-    <box flexDirection="column">
-      <box flexDirection="row" justifyContent="center">
-        <ascii_font text="MAGI" font="tiny" color={theme.purple} />
-      </box>
-      <box flexDirection="row" justifyContent="center">
-        <text>
-          <span style={{ fg: theme.textDim }}>── </span>
-          <span style={{ fg: theme.cyan }}>Vertex Agent TUI</span>
-          <span style={{ fg: theme.textDim }}> ──</span>
-        </text>
-      </box>
-      <box
-        flexDirection="row"
-        justifyContent="center"
-        gap={2}
-        marginTop={1}
-        marginBottom={1}
-      >
-        <text>
-          <span style={{ fg: theme.textDim }}>mode </span>
-          <span style={{ fg: theme.teal }}>{props.modeLabel}</span>
-        </text>
-        <text>
-          <span style={{ fg: theme.textDim }}>│</span>
-        </text>
-        <text>
-          <span style={{ fg: theme.textDim }}>model </span>
-          <span style={{ fg: theme.orange }}>{props.model}</span>
-        </text>
-      </box>
+    <box flexDirection="row" justifyContent="center">
+      <ascii_font text="MAGI" font="tiny" color={theme.purple} />
     </box>
   );
 }
@@ -536,22 +512,19 @@ function MessageBubble(props: { message: TranscriptMessage }) {
   const text = () => props.message.text;
 
   return (
-    <box flexDirection="column" marginBottom={0}>
-      <box flexDirection="row">
+    <box flexDirection="column" marginBottom={1}>
+      <box flexDirection="row" marginBottom={0}>
         <text>
           <span style={{ fg: roleColor(role()) }}>
-            {roleIcon(role())}
-          </span>
-          <span style={{ fg: roleColor(role()) }}>
-            <strong>{roleLabel(role())}</strong>
+            {roleLabel(role())}
           </span>
           <Show when={isStreaming()}>
-            <span style={{ fg: theme.textDim }}> ...</span>
+            <span style={{ fg: theme.textMuted }}> ...</span>
           </Show>
         </text>
       </box>
       <Show when={role() === "assistant" && text()}>
-        <box marginLeft={12}>
+        <box>
           <markdown
             content={text()}
             streaming={isStreaming()}
@@ -560,14 +533,11 @@ function MessageBubble(props: { message: TranscriptMessage }) {
         </box>
       </Show>
       <Show when={role() !== "assistant" && (text() || isStreaming())}>
-        <box marginLeft={12}>
+        <box>
           <text>
             <span
               style={{
-                fg:
-                  role() === "system"
-                    ? theme.textDim
-                    : theme.text,
+                fg: roleMessageColor(role()),
               }}
             >
               {text() || (isStreaming() ? "..." : "")}
@@ -579,11 +549,33 @@ function MessageBubble(props: { message: TranscriptMessage }) {
   );
 }
 
-function StatusIndicator(props: { status: string; canSend: boolean; replying: boolean }) {
+function ChatInput(props: {
+  draft: string;
+  onInput: (value: string) => void;
+  onSubmit: (value: string) => void;
+  focused: boolean;
+  canSend: boolean;
+  replying: boolean;
+  status: string;
+  hasError: boolean;
+}) {
+  const accentColor = () => {
+    if (props.hasError) return theme.red;
+    if (props.replying) return theme.yellow;
+    if (props.canSend) return theme.purple;
+    return theme.border;
+  };
+
+  const stateIcon = () => {
+    if (props.replying) return "◆";
+    if (props.canSend) return "◆";
+    return "◇";
+  };
+
   const stateColor = () => {
     if (props.replying) return theme.yellow;
     if (props.canSend) return theme.green;
-    return theme.textDim;
+    return theme.textMuted;
   };
 
   const stateLabel = () => {
@@ -593,30 +585,57 @@ function StatusIndicator(props: { status: string; canSend: boolean; replying: bo
   };
 
   return (
-    <box flexDirection="row" justifyContent="space-between" marginTop={0} paddingX={1}>
-      <text>
-        <span style={{ fg: theme.textDim }}>
-          <em>Enter</em> send
-        </span>
-        <span style={{ fg: theme.textMuted }}> │ </span>
-        <span style={{ fg: theme.textDim }}>
-          <em>/help</em> commands
-        </span>
-        <span style={{ fg: theme.textMuted }}> │ </span>
-        <span style={{ fg: theme.textDim }}>
-          <em>/connect</em> auth
-        </span>
-        <span style={{ fg: theme.textMuted }}> │ </span>
-        <span style={{ fg: theme.textDim }}>
-          <em>Ctrl+C</em> exit
-        </span>
-      </text>
-      <text>
-        <span style={{ fg: stateColor() }}>● </span>
-        <span style={{ fg: stateColor() }}>{stateLabel()}</span>
-        <span style={{ fg: theme.textMuted }}> │ </span>
-        <span style={{ fg: theme.textDim }}>{props.status}</span>
-      </text>
+    <box flexDirection="column" gap={0}>
+      {/* Main input container */}
+      <box
+        backgroundColor={theme.bgLight}
+        paddingX={2}
+        paddingY={1}
+      >
+        <box flexDirection="row" alignItems="center">
+          {/* Prompt chevron */}
+          <text>
+            <span style={{ fg: accentColor() }}>
+              <strong>❯ </strong>
+            </span>
+          </text>
+          {/* Input field */}
+          <box flexGrow={1}>
+            <input
+              focused={props.focused}
+              placeholder={props.hasError ? "Fix auth first..." : "Ask anything..."}
+              value={props.draft}
+              onInput={props.onInput}
+              onSubmit={(v) => props.onSubmit(typeof v === "string" ? v : props.draft)}
+              backgroundColor={theme.bgLight}
+              focusedBackgroundColor={theme.bgLight}
+              textColor={theme.text}
+              placeholderColor={theme.textDim}
+              cursorColor={theme.purple}
+            />
+          </box>
+          {/* Inline status pill */}
+          <text>
+            <span style={{ fg: theme.textMuted }}> </span>
+            <span style={{ fg: stateColor() }}>{stateIcon()}</span>
+            <span style={{ fg: theme.textDim }}> {stateLabel()}</span>
+          </text>
+        </box>
+      </box>
+
+      {/* Hints row below */}
+      <box flexDirection="row" justifyContent="space-between" paddingX={2}>
+        <text>
+          <span style={{ fg: theme.textMuted }}>
+            /help · ctrl+c exit
+          </span>
+        </text>
+        <text>
+          <span style={{ fg: theme.textMuted }}>
+            {props.status}
+          </span>
+        </text>
+      </box>
     </box>
   );
 }
@@ -669,8 +688,10 @@ function ModalCard(props: { title: string; children: any }) {
 
 function App() {
   let nextId = 1;
+  let emptyLogoTimer: ReturnType<typeof setInterval> | null = null;
   const renderer = useRenderer();
   const initialState = loadPersistedState();
+  const EMPTY_LOGO_TEXT = "MAGI";
 
   const [draft, setDraft] = createSignal("");
   const [model, setModel] = createSignal(initialState.model);
@@ -688,6 +709,9 @@ function App() {
     string | null
   >(null);
   const [autoReconnect, setAutoReconnect] = createSignal(initialState.autoReconnect);
+  const [showSystemMessages, setShowSystemMessages] = createSignal(
+    initialState.showSystemMessages,
+  );
   const [client, setClient] = createSignal<RuntimeClient | null>(null);
   const [chatSession, setChatSession] = createSignal<Chat | null>(null);
   const [oauthGenerator, setOauthGenerator] =
@@ -705,6 +729,13 @@ function App() {
       !replying() &&
       (!!chatSession() || !!oauthGenerator()),
   );
+  const visibleMessages = createMemo(() =>
+    showSystemMessages()
+      ? messages()
+      : messages().filter((message) => message.role !== "system"),
+  );
+  const isEmptyView = createMemo(() => visibleMessages().length === 0);
+  const [emptyLogoText, setEmptyLogoText] = createSignal(EMPTY_LOGO_TEXT);
 
   const modeLabel = createMemo(() => client()?.modeLabel ?? "not configured");
   const authModalVisible = createMemo(
@@ -714,6 +745,45 @@ function App() {
   const selectedAuthType = createMemo(
     () => authOverride() ?? getSelectedAuthType(),
   );
+
+  const stopEmptyLogoAnimation = (): void => {
+    if (emptyLogoTimer) {
+      clearInterval(emptyLogoTimer);
+      emptyLogoTimer = null;
+    }
+  };
+
+  const buildEmptyLogoFrame = (progress: number): string => {
+    const dust = [".", ":", "*", " "];
+    const clamped = Math.max(0, Math.min(1, progress));
+    return EMPTY_LOGO_TEXT.split("")
+      .map((char, index) => {
+        const revealThreshold = (index + 1) / EMPTY_LOGO_TEXT.length;
+        if (clamped >= revealThreshold) return char;
+        if (Math.random() < clamped * 0.25) return char;
+        return dust[Math.floor(Math.random() * dust.length)];
+      })
+      .join("");
+  };
+
+  const startEmptyLogoAnimation = (): void => {
+    stopEmptyLogoAnimation();
+
+    const steps = 12;
+    let step = 0;
+
+    setEmptyLogoText(buildEmptyLogoFrame(0));
+    emptyLogoTimer = setInterval(() => {
+      step += 1;
+      const progress = step / (steps - 1);
+      if (progress >= 1) {
+        setEmptyLogoText(EMPTY_LOGO_TEXT);
+        stopEmptyLogoAnimation();
+        return;
+      }
+      setEmptyLogoText(buildEmptyLogoFrame(progress));
+    }, 55);
+  };
 
   const appendMessage = (
     role: MessageRole,
@@ -747,11 +817,6 @@ function App() {
           role: "system",
           text: `Connected: ${activeClient.modeLabel}`,
         },
-        {
-          id: nextId++,
-          role: "system",
-          text: "Commands: /help, /auth <method>, /connect, /model <name>, /system <instruction>, /clear, /exit",
-        },
       ]);
       return;
     }
@@ -764,17 +829,7 @@ function App() {
       {
         id: nextId++,
         role: "system",
-        text: `Welcome! Auth mode: ${authTypeLabel(selectedAuthType())}. Use /auth to change.`,
-      },
-      {
-        id: nextId++,
-        role: "system",
-        text: "Run /connect to authenticate and start a session.",
-      },
-      {
-        id: nextId++,
-        role: "system",
-        text: "Commands: /help  /auth <method>  /connect  /model <name>  /system <instruction>  /clear  /exit",
+        text: "Type /connect to start or /help for commands.",
       },
     ]);
     setStatus("Ready");
@@ -932,7 +987,7 @@ function App() {
   const showHelp = (): void => {
     appendMessage(
       "system",
-      "Commands: /help  /auth [google|vertex|gemini|compute|auto]  /connect  /model <name>  /system <instruction>  /clear  /exit",
+      "Commands: /help  /auth [google|vertex|gemini|compute|auto]  /connect  /model <name>  /system <instruction>  /sysmsgs [on|off|toggle]  /clear  /exit",
     );
   };
 
@@ -1066,6 +1121,38 @@ function App() {
         } else {
           setWelcomeBanner();
         }
+        return true;
+      }
+      case "sysmsgs": {
+        if (!value) {
+          setStatus(
+            showSystemMessages()
+              ? "System messages: visible"
+              : "System messages: hidden",
+          );
+          return true;
+        }
+
+        if (value === "on") {
+          setShowSystemMessages(true);
+          setStatus("System messages: visible");
+          return true;
+        }
+
+        if (value === "off") {
+          setShowSystemMessages(false);
+          setStatus("System messages: hidden");
+          return true;
+        }
+
+        if (value === "toggle") {
+          const next = !showSystemMessages();
+          setShowSystemMessages(next);
+          setStatus(next ? "System messages: visible" : "System messages: hidden");
+          return true;
+        }
+
+        setStatus("Usage: /sysmsgs [on|off|toggle]");
         return true;
       }
       case "exit": {
@@ -1264,7 +1351,21 @@ function App() {
       authMode: authTypeToPersistedMode(authOverride()),
       systemInstruction: systemInstruction(),
       autoReconnect: autoReconnect(),
+      showSystemMessages: showSystemMessages(),
     });
+  });
+
+  createEffect(() => {
+    if (isEmptyView()) {
+      startEmptyLogoAnimation();
+      return;
+    }
+    stopEmptyLogoAnimation();
+    setEmptyLogoText(EMPTY_LOGO_TEXT);
+  });
+
+  onCleanup(() => {
+    stopEmptyLogoAnimation();
   });
 
   return (
@@ -1276,54 +1377,50 @@ function App() {
       paddingY={1}
     >
       {/* Header */}
-      <Header modeLabel={modeLabel()} model={model()} />
+      <Show when={!isEmptyView()}>
+        <Header />
+      </Show>
 
       {/* Chat area */}
       <scrollbox
-        border
-        borderStyle="rounded"
-        borderColor={theme.border}
         flexGrow={1}
         stickyScroll
         stickyStart="bottom"
         paddingX={1}
-        paddingY={1}
-        marginBottom={1}
+        justifyContent="flex-end"
       >
-        <For each={messages()}>
-          {(message) => <MessageBubble message={message} />}
-        </For>
+        <Show
+          when={isEmptyView()}
+          fallback={
+            <box flexDirection="column" minHeight="100%">
+              <box flexGrow={1} />
+              <For each={visibleMessages()}>
+                {(message) => <MessageBubble message={message} />}
+              </For>
+            </box>
+          }
+        >
+          <box
+            flexDirection="column"
+            minHeight="100%"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <ascii_font text={emptyLogoText()} font="tiny" color={theme.purple} />
+          </box>
+        </Show>
       </scrollbox>
 
       {/* Input area */}
-      <box
-        border
-        borderStyle="rounded"
-        borderColor={canSend() ? theme.borderFocused : theme.border}
-        backgroundColor={theme.inputBg}
-        padding={1}
-      >
-        <input
-          focused={!authModalVisible()}
-          placeholder={bootError() ? "❯ Fix auth first..." : "❯ Ask anything..."}
-          value={draft()}
-          onInput={(value) => setDraft(value)}
-          onSubmit={(valueOrEvent) =>
-            submit(typeof valueOrEvent === "string" ? valueOrEvent : draft())
-          }
-          backgroundColor={theme.inputBg}
-          focusedBackgroundColor={theme.inputFocusBg}
-          textColor={theme.text}
-          placeholderColor={theme.textDim}
-          cursorColor={theme.blue}
-        />
-      </box>
-
-      {/* Status bar */}
-      <StatusIndicator
-        status={status()}
+      <ChatInput
+        draft={draft()}
+        onInput={(value) => setDraft(value)}
+        onSubmit={(value) => submit(value)}
+        focused={!authModalVisible()}
         canSend={canSend()}
         replying={replying()}
+        status={status()}
+        hasError={!!bootError()}
       />
 
       {/* OAuth progress modal */}
