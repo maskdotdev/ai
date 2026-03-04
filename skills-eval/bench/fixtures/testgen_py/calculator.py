@@ -1,0 +1,11 @@
+"""Simple module used for test-generation evals."""
+
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+
+def divide(a: int, b: int) -> float:
+    if b == 0:
+        raise ValueError("division by zero")
+    return a / b

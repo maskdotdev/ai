@@ -1,0 +1,13 @@
+tasks_glob: "tasks/*.yaml"
+trials: 5
+timeout_s: 240
+seed: 1111
+skills:
+  codex_good:
+    type: command
+    command: "../scripts/run_codex_good.sh"
+    shell: zsh
+  codex_bad:
+    type: command
+    command: "../scripts/run_codex_bad.sh"
+    shell: zsh

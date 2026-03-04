@@ -1,0 +1,13 @@
+tasks_glob: "tasks/*.yaml"
+trials: 5
+timeout_s: 30
+seed: 4242
+skills:
+  skill_good:
+    type: command
+    command: "../scripts/skill_good.sh"
+    shell: zsh
+  skill_bad:
+    type: command
+    command: "../scripts/skill_bad.sh"
+    shell: zsh

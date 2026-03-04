@@ -1,0 +1,18 @@
+id: testgen_pytest_aaa
+prompt: "Generate pytest tests for calculator.py in tests/test_calculator.py. Cover normal addition and divide-by-zero behavior with clear, readable tests."
+difficulty: normal
+tags: ["testgen", "pytest", "quality"]
+fixtures_dir: ../fixtures/testgen_py
+checks:
+  - type: file_exists
+    path: tests/test_calculator.py
+  - type: command_exit
+    command: "python -m pytest -q"
+    exit_code: 0
+  - type: custom
+    target: "/Users/mask/code/ai/skills-eval/bench/checks/test_generation.py:validate_test_file"
+    kwargs:
+      path: "tests/test_calculator.py"
+      min_tests: 2
+      require_aaa: true
+      require_targets: ["add", "divide"]

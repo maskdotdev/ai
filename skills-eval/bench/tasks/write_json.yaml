@@ -1,0 +1,10 @@
+id: write_json
+prompt: "Write valid JSON to result.json with key ok=true"
+difficulty: normal
+tags: ["json"]
+checks:
+  - type: file_exists
+    path: result.json
+  - type: command_exit
+    command: "python -c 'import json; d=json.load(open(\"result.json\")); import sys; sys.exit(0 if d.get(\"ok\") is True else 1)'"
+    exit_code: 0

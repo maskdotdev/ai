@@ -1,0 +1,11 @@
+id: write_ready
+prompt: "Write READY into answer.txt"
+difficulty: easy
+tags: ["smoke", "file"]
+fixtures_dir: ../fixtures/task_file
+checks:
+  - type: file_exists
+    path: answer.txt
+  - type: file_contains
+    path: answer.txt
+    text: READY

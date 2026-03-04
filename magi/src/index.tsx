@@ -1,5 +1,10 @@
-import { TextAttributes, SyntaxStyle } from "@opentui/core";
-import { render, useKeyboard, useRenderer } from "@opentui/solid";
+import {
+  type KeyEvent as TuiKeyEvent,
+  type TextareaRenderable,
+  TextAttributes,
+  SyntaxStyle,
+} from "@opentui/core";
+import { render, useKeyboard, useRenderer, useSelectionHandler } from "@opentui/solid";
 import { GoogleGenAI, type Chat, type Content } from "@google/genai";
 import { GoogleAuth } from "google-auth-library";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -32,42 +37,42 @@ import {
 // ─── Theme ──────────────────────────────────────────────────────────────────
 
 const theme = {
-  // Backgrounds
-  bg: "#1a1b26",
-  bgDark: "#16161e",
-  bgLight: "#24283b",
-  bgHighlight: "#292e42",
+  // Backgrounds — deep noir blacks
+  bg: "#0a0a0a",
+  bgDark: "#050505",
+  bgLight: "#141414",
+  bgHighlight: "#1a1a1a",
 
-  // Borders
-  border: "#414868",
-  borderFocused: "#7aa2f7",
-  borderAccent: "#bb9af7",
+  // Borders — subtle gold & warm grays
+  border: "#2a2520",
+  borderFocused: "#c9a84c",
+  borderAccent: "#d4af37",
 
-  // Text
-  text: "#c0caf5",
-  textDim: "#565f89",
-  textMuted: "#3b4261",
+  // Text — champagne & warm neutrals
+  text: "#e8dcc8",
+  textDim: "#8a7e6b",
+  textMuted: "#4a4238",
 
-  // Accents
-  blue: "#7aa2f7",
-  purple: "#bb9af7",
-  cyan: "#7dcfff",
-  green: "#9ece6a",
-  yellow: "#e0af68",
-  red: "#f7768e",
-  orange: "#ff9e64",
-  teal: "#73daca",
+  // Accents — gold, amber, warm metallics
+  blue: "#c9a84c",       // gold (primary accent)
+  purple: "#d4af37",     // rich gold
+  cyan: "#e8c547",       // bright gold
+  green: "#b8a04e",      // antique gold
+  yellow: "#d4a017",     // deep amber
+  red: "#c45a3c",        // burnt sienna
+  orange: "#d4883a",     // warm amber
+  teal: "#a89860",       // muted brass
 
-  // Role colors
-  roleUser: "#9ece6a",
-  roleAssistant: "#7aa2f7",
-  roleSystem: "#e0af68",
+  // Role colors — distinguished hierarchy
+  roleUser: "#b8a04e",       // antique gold for user
+  roleAssistant: "#d4af37",  // rich gold for assistant
+  roleSystem: "#6b5f4d",     // muted bronze for system
 
   // Specific elements
-  inputBg: "#1f2335",
-  inputFocusBg: "#24283b",
-  modalBg: "#1f2335",
-  modalBorder: "#bb9af7",
+  inputBg: "#0f0f0f",
+  inputFocusBg: "#141414",
+  modalBg: "#0f0e0c",
+  modalBorder: "#d4af37",
 };
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -102,10 +107,42 @@ interface PersistedState {
   showSystemMessages: boolean;
 }
 
+interface SlashCommandDefinition {
+  name: string;
+  completion: string;
+}
+
+interface CommandAutocompleteCycle {
+  matches: string[];
+  index: number;
+}
+
 // ─── Config ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = process.env.GENAI_MODEL ?? "gemini-2.5-flash";
 const syntaxStyle = SyntaxStyle.create();
+const SLASH_COMMANDS: SlashCommandDefinition[] = [
+  { name: "help", completion: "/help" },
+  { name: "auth", completion: "/auth " },
+  { name: "connect", completion: "/connect" },
+  { name: "model", completion: "/model " },
+  { name: "system", completion: "/system " },
+  { name: "sysmsgs", completion: "/sysmsgs " },
+  { name: "clear", completion: "/clear" },
+  { name: "exit", completion: "/exit" },
+];
+
+function getSlashCommandMatches(value: string): string[] {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("/")) return [];
+  if (/\s/.test(trimmed.slice(1))) return [];
+
+  const needle = trimmed.slice(1).toLowerCase();
+  return SLASH_COMMANDS.filter((command) => command.name.startsWith(needle)).map(
+    (command) => command.completion,
+  );
+}
+
 const PERSISTED_STATE_PATH =
   process.env.MAGI_STATE_PATH ??
   join(
@@ -372,7 +409,7 @@ function buildClient(
     }
 
     return {
-      ai: new GoogleGenAI({ apiKey }),
+      ai: new GoogleGenAI({ apiKey, vertexai: false }),
       modeLabel: "Gemini API (GEMINI_API_KEY)",
       authType,
     };
@@ -383,13 +420,20 @@ function buildClient(
   const location = process.env.GOOGLE_CLOUD_LOCATION;
   const apiKey = process.env.GOOGLE_API_KEY;
 
+  if (authType === GeminiAuthType.USE_VERTEX_AI && apiKey) {
+    return {
+      ai: new GoogleGenAI({ apiKey, vertexai: false }),
+      modeLabel: "Gemini API (GOOGLE_API_KEY)",
+      authType,
+    };
+  }
+
   if (
     authType === GeminiAuthType.USE_VERTEX_AI &&
-    !apiKey &&
     (!project || !location)
   ) {
     throw new Error(
-      "When using Vertex AI, set either (GOOGLE_CLOUD_PROJECT + GOOGLE_CLOUD_LOCATION) or GOOGLE_API_KEY.",
+      "When using Vertex AI, set GOOGLE_CLOUD_PROJECT + GOOGLE_CLOUD_LOCATION (OAuth/ADC) or use /auth gemini with an API key.",
     );
   }
 
@@ -466,11 +510,11 @@ function modelContent(text: string): Content {
 function roleLabel(role: MessageRole): string {
   switch (role) {
     case "assistant":
-      return "assistant";
+      return "MAGI";
     case "user":
-      return "user";
+      return "YOU";
     case "system":
-      return "system";
+      return "SYS";
   }
 }
 
@@ -506,26 +550,45 @@ function Header() {
   );
 }
 
+function AnimatedDots(props: { color?: string; speed?: number }) {
+  const frames = ["·  ", "·· ", "···", " ··", "  ·", "   "];
+  const [frame, setFrame] = createSignal(0);
+
+  const interval = setInterval(
+    () => setFrame((f) => (f + 1) % frames.length),
+    props.speed ?? 180,
+  );
+  onCleanup(() => clearInterval(interval));
+
+  return (
+    <span style={{ fg: props.color ?? theme.textMuted }}>
+      {" "}{frames[frame()]}
+    </span>
+  );
+}
+
 function MessageBubble(props: { message: TranscriptMessage }) {
   const isStreaming = () => props.message.streaming;
   const role = () => props.message.role;
   const text = () => props.message.text;
+  const selectableMarkdownProps = { selectable: true } as any;
 
   return (
     <box flexDirection="column" marginBottom={1}>
       <box flexDirection="row" marginBottom={0}>
         <text>
           <span style={{ fg: roleColor(role()) }}>
-            {roleLabel(role())}
+            <strong>{roleLabel(role())}</strong>
           </span>
           <Show when={isStreaming()}>
-            <span style={{ fg: theme.textMuted }}> ...</span>
+            <AnimatedDots color={theme.textDim} />
           </Show>
         </text>
       </box>
       <Show when={role() === "assistant" && text()}>
         <box>
           <markdown
+            {...selectableMarkdownProps}
             content={text()}
             streaming={isStreaming()}
             syntaxStyle={syntaxStyle}
@@ -534,7 +597,7 @@ function MessageBubble(props: { message: TranscriptMessage }) {
       </Show>
       <Show when={role() !== "assistant" && (text() || isStreaming())}>
         <box>
-          <text>
+          <text selectable>
             <span
               style={{
                 fg: roleMessageColor(role()),
@@ -551,14 +614,24 @@ function MessageBubble(props: { message: TranscriptMessage }) {
 
 function ChatInput(props: {
   draft: string;
-  onInput: (value: string) => void;
-  onSubmit: (value: string) => void;
+  onDraftChange: (value: string) => void;
+  onCursorChange: (line: number) => void;
+  onArrowBoundary: (direction: "up" | "down", event: TuiKeyEvent) => void;
+  onCommandAutocomplete: (
+    direction: "forward" | "backward",
+    event: TuiKeyEvent,
+  ) => void;
+  onSubmit: () => void;
+  onInputRef: (input: TextareaRenderable | null) => void;
   focused: boolean;
   canSend: boolean;
   replying: boolean;
   status: string;
   hasError: boolean;
+  commandInlineSuggestion: string | null;
 }) {
+  let editorRef: TextareaRenderable | null = null;
+
   const accentColor = () => {
     if (props.hasError) return theme.red;
     if (props.replying) return theme.yellow;
@@ -566,10 +639,17 @@ function ChatInput(props: {
     return theme.border;
   };
 
+  const [pulseFrame, setPulseFrame] = createSignal(0);
+  const pulseChars = ["●", "◉", "○", "◉"];
+  const pulseInterval = setInterval(() => {
+    if (props.replying) setPulseFrame((f) => (f + 1) % pulseChars.length);
+  }, 300);
+  onCleanup(() => clearInterval(pulseInterval));
+
   const stateIcon = () => {
-    if (props.replying) return "◆";
-    if (props.canSend) return "◆";
-    return "◇";
+    if (props.replying) return pulseChars[pulseFrame()];
+    if (props.canSend) return "●";
+    return "○";
   };
 
   const stateColor = () => {
@@ -592,21 +672,47 @@ function ChatInput(props: {
         paddingX={2}
         paddingY={1}
       >
-        <box flexDirection="row" alignItems="center">
+        <box flexDirection="row" alignItems="flex-start">
           {/* Prompt chevron */}
           <text>
             <span style={{ fg: accentColor() }}>
-              <strong>❯ </strong>
+              <strong>› </strong>
             </span>
           </text>
           {/* Input field */}
           <box flexGrow={1}>
-            <input
+            <textarea
+              ref={(input) => {
+                editorRef = input;
+                props.onInputRef(input);
+              }}
               focused={props.focused}
               placeholder={props.hasError ? "Fix auth first..." : "Ask anything..."}
-              value={props.draft}
-              onInput={props.onInput}
-              onSubmit={(v) => props.onSubmit(typeof v === "string" ? v : props.draft)}
+              initialValue={props.draft}
+              height={3}
+              wrapMode="word"
+              keyBindings={[
+                { name: "return", action: "submit" },
+                { name: "return", shift: true, action: "newline" },
+                { name: "return", meta: true, action: "newline" },
+              ]}
+              onContentChange={() =>
+                props.onDraftChange(editorRef?.plainText ?? props.draft)}
+              onCursorChange={(cursor) => props.onCursorChange(cursor.line)}
+              onKeyDown={(event) => {
+                if (event.name === "up" || event.name === "down") {
+                  props.onArrowBoundary(event.name, event);
+                  return;
+                }
+
+                if (event.name === "tab") {
+                  props.onCommandAutocomplete(
+                    event.shift ? "backward" : "forward",
+                    event,
+                  );
+                }
+              }}
+              onSubmit={props.onSubmit}
               backgroundColor={theme.bgLight}
               focusedBackgroundColor={theme.bgLight}
               textColor={theme.text}
@@ -614,6 +720,13 @@ function ChatInput(props: {
               cursorColor={theme.purple}
             />
           </box>
+          <Show when={props.commandInlineSuggestion}>
+            <text>
+              <span style={{ fg: theme.textDim }}>
+                {" "}<strong>↹</strong> {props.commandInlineSuggestion}
+              </span>
+            </text>
+          </Show>
           {/* Inline status pill */}
           <text>
             <span style={{ fg: theme.textMuted }}> </span>
@@ -627,7 +740,7 @@ function ChatInput(props: {
       <box flexDirection="row" justifyContent="space-between" paddingX={2}>
         <text>
           <span style={{ fg: theme.textMuted }}>
-            /help · ctrl+c exit
+            /help · tab autocomplete · shift+↵ or alt+↵ newline · ctrl+c exit
           </span>
         </text>
         <text>
@@ -676,7 +789,7 @@ function ModalCard(props: { title: string; children: any }) {
       </text>
       <text>
         <span style={{ fg: theme.border }}>
-          {"─".repeat(60)}
+          {"━".repeat(60)}
         </span>
       </text>
       {props.children}
@@ -722,6 +835,19 @@ function App() {
   const [oauthProgressModal, setOauthProgressModal] =
     createSignal<OauthProgressModal | null>(null);
   const [bootError, setBootError] = createSignal<string | null>(null);
+  const [promptHistory, setPromptHistory] = createSignal<string[]>([]);
+  const [promptHistoryIndex, setPromptHistoryIndex] = createSignal<number | null>(
+    null,
+  );
+  const [commandAutocompleteCycle, setCommandAutocompleteCycle] =
+    createSignal<CommandAutocompleteCycle | null>(null);
+  const [historyDraft, setHistoryDraft] = createSignal("");
+  const [inputCursorLine, setInputCursorLine] = createSignal(0);
+  const [inputCursorBaseLine, setInputCursorBaseLine] = createSignal<
+    number | null
+  >(null);
+  const [lastSelectionDigest, setLastSelectionDigest] = createSignal("");
+  let chatInputRef: TextareaRenderable | null = null;
 
   const canSend = createMemo(
     () =>
@@ -741,6 +867,21 @@ function App() {
   const authModalVisible = createMemo(
     () => !!oauthConsentRequest() || !!oauthProgressModal(),
   );
+  const commandInlineSuggestion = createMemo(() => {
+    const value = draft().trim();
+    const matches = getSlashCommandMatches(value).map((v) => v.trimEnd());
+    if (matches.length === 0) return null;
+    const primary = matches[0];
+    if (!primary) return null;
+
+    const typedToken = value.split(/\s+/, 1)[0]?.toLowerCase();
+    if (matches.length === 1 && typedToken && typedToken === primary) {
+      return null;
+    }
+
+    if (matches.length === 1) return primary;
+    return `${primary} (+${matches.length - 1})`;
+  });
 
   const selectedAuthType = createMemo(
     () => authOverride() ?? getSelectedAuthType(),
@@ -783,6 +924,150 @@ function App() {
       }
       setEmptyLogoText(buildEmptyLogoFrame(progress));
     }, 55);
+  };
+
+  const getDraftLineCount = (): number =>
+    Math.max(1, draft().split(/\r?\n/).length);
+
+  const syncInputDraft = (value: string): void => {
+    setDraft(value);
+    const input = chatInputRef;
+    if (input) {
+      input.replaceText(value);
+      input.cursorOffset = value.length;
+    }
+  };
+
+  const handleDraftChange = (value: string): void => {
+    const previous = draft();
+    setDraft(value);
+
+    const cycle = commandAutocompleteCycle();
+    if (cycle && value !== cycle.matches[cycle.index]) {
+      setCommandAutocompleteCycle(null);
+    }
+
+    if (value !== previous && promptHistoryIndex() !== null) {
+      setPromptHistoryIndex(null);
+      setHistoryDraft("");
+    }
+  };
+
+  const handleCursorChange = (line: number): void => {
+    if (inputCursorBaseLine() === null) {
+      setInputCursorBaseLine(line);
+    }
+    setInputCursorLine(line);
+  };
+
+  const isCursorAtTopLine = (): boolean => {
+    const base = inputCursorBaseLine();
+    if (base === null) return true;
+    return inputCursorLine() <= base;
+  };
+
+  const isCursorAtBottomLine = (): boolean => {
+    const base = inputCursorBaseLine();
+    if (base === null) return true;
+    const bottomLine = base + getDraftLineCount() - 1;
+    return inputCursorLine() >= bottomLine;
+  };
+
+  const navigatePromptHistory = (direction: "up" | "down"): boolean => {
+    const entries = promptHistory();
+    if (entries.length === 0) return false;
+
+    const activeIndex = promptHistoryIndex();
+
+    if (direction === "up") {
+      if (activeIndex === null) {
+        setHistoryDraft(draft());
+        const nextIndex = entries.length - 1;
+        const nextDraft = entries[nextIndex];
+        if (nextDraft === undefined) return false;
+        setPromptHistoryIndex(nextIndex);
+        syncInputDraft(nextDraft);
+        return true;
+      }
+
+      const nextIndex = Math.max(0, activeIndex - 1);
+      const nextDraft = entries[nextIndex];
+      if (nextDraft === undefined) return false;
+      setPromptHistoryIndex(nextIndex);
+      syncInputDraft(nextDraft);
+      return true;
+    }
+
+    if (activeIndex === null) return false;
+
+    const nextIndex = activeIndex + 1;
+    if (nextIndex < entries.length) {
+      const nextDraft = entries[nextIndex];
+      if (nextDraft === undefined) return false;
+      setPromptHistoryIndex(nextIndex);
+      syncInputDraft(nextDraft);
+      return true;
+    }
+
+    setPromptHistoryIndex(null);
+    syncInputDraft(historyDraft());
+    setHistoryDraft("");
+    return true;
+  };
+
+  const handleHistoryBoundaryNavigation = (
+    direction: "up" | "down",
+    event: TuiKeyEvent,
+  ): void => {
+    if (direction === "up") {
+      if (!isCursorAtTopLine()) return;
+    } else if (!isCursorAtBottomLine()) {
+      return;
+    }
+
+    if (navigatePromptHistory(direction)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  const handleCommandAutocomplete = (
+    direction: "forward" | "backward",
+    event: TuiKeyEvent,
+  ): void => {
+    const currentDraft = draft();
+    const cycle = commandAutocompleteCycle();
+
+    if (
+      cycle &&
+      cycle.matches.length > 0 &&
+      currentDraft === cycle.matches[cycle.index]
+    ) {
+      const delta = direction === "forward" ? 1 : -1;
+      const nextIndex = (cycle.index + delta + cycle.matches.length) % cycle.matches.length;
+      const nextDraft = cycle.matches[nextIndex];
+      if (nextDraft === undefined) return;
+      setCommandAutocompleteCycle({ ...cycle, index: nextIndex });
+      syncInputDraft(nextDraft);
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    const matches = getSlashCommandMatches(currentDraft);
+    if (matches.length === 0) return;
+
+    const nextIndex = direction === "forward" ? 0 : matches.length - 1;
+    const nextDraft = matches[nextIndex];
+    if (nextDraft === undefined) return;
+
+    setCommandAutocompleteCycle({
+      matches,
+      index: nextIndex,
+    });
+    syncInputDraft(nextDraft);
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const appendMessage = (
@@ -829,7 +1114,7 @@ function App() {
       {
         id: nextId++,
         role: "system",
-        text: "Type /connect to start or /help for commands.",
+        text: "/connect to begin · /help for commands",
       },
     ]);
     setStatus("Ready");
@@ -942,7 +1227,7 @@ function App() {
       ) {
         appendMessage(
           "system",
-          "When using Vertex AI, set either (GOOGLE_CLOUD_PROJECT + GOOGLE_CLOUD_LOCATION) or GOOGLE_API_KEY.",
+          "When using Vertex AI, set GOOGLE_CLOUD_PROJECT + GOOGLE_CLOUD_LOCATION, or switch to /auth gemini for API key auth.",
         );
         setStatus("Auth required");
         return;
@@ -987,7 +1272,7 @@ function App() {
   const showHelp = (): void => {
     appendMessage(
       "system",
-      "Commands: /help  /auth [google|vertex|gemini|compute|auto]  /connect  /model <name>  /system <instruction>  /sysmsgs [on|off|toggle]  /clear  /exit",
+      "/help · /auth [google|vertex|gemini|compute|auto] · /connect · /model <name> · /system <instruction> · /sysmsgs [on|off|toggle] · /clear · /exit",
     );
   };
 
@@ -1253,7 +1538,10 @@ function App() {
 
   const submit = (value: string): void => {
     const prompt = value.trim();
-    setDraft("");
+    syncInputDraft("");
+    setPromptHistoryIndex(null);
+    setCommandAutocompleteCycle(null);
+    setHistoryDraft("");
 
     if (!prompt) return;
 
@@ -1264,6 +1552,7 @@ function App() {
       return;
     }
 
+    setPromptHistory((current) => [...current, prompt]);
     void sendPrompt(prompt);
   };
 
@@ -1275,6 +1564,20 @@ function App() {
     request.onConfirm(confirmed);
     setStatus(confirmed ? "Connecting..." : "Connect cancelled");
   };
+
+  useSelectionHandler((selection) => {
+    if (selection.isDragging) return;
+
+    const text = selection.getSelectedText().trim();
+    if (!text) return;
+
+    const digest = `${selection.anchor.x}:${selection.anchor.y}:${selection.focus.x}:${selection.focus.y}:${text.length}`;
+    if (digest === lastSelectionDigest()) return;
+
+    renderer.copyToClipboardOSC52(text);
+    setLastSelectionDigest(digest);
+    setStatus(`Copied selection (${text.length} chars)`);
+  });
 
   useKeyboard((event) => {
     if (oauthConsentRequest()) {
@@ -1295,6 +1598,15 @@ function App() {
     }
 
     if (event.ctrl && event.name === "c") {
+      const selection = renderer.getSelection();
+      if (selection) {
+        const text = selection.getSelectedText().trim();
+        if (text) {
+          renderer.copyToClipboardOSC52(text);
+          setStatus(`Copied selection (${text.length} chars)`);
+          return;
+        }
+      }
       renderer.destroy();
     }
   });
@@ -1377,9 +1689,6 @@ function App() {
       paddingX={2}
       paddingY={1}
     >
-      {/* Header */}
-      <Header />
-
       {/* Chat area */}
       <scrollbox
         flexGrow={1}
@@ -1400,7 +1709,8 @@ function App() {
           </box>
         </Show>
         <Show when={!isEmptyView()}>
-          <box flexDirection="column">
+          <box flexDirection="column" minHeight="100%">
+            <box flexGrow={1} />
             <For each={visibleMessages()}>
               {(message) => <MessageBubble message={message} />}
             </For>
@@ -1411,13 +1721,20 @@ function App() {
       {/* Input area */}
       <ChatInput
         draft={draft()}
-        onInput={(value) => setDraft(value)}
-        onSubmit={(value) => submit(value)}
+        onDraftChange={handleDraftChange}
+        onCursorChange={handleCursorChange}
+        onArrowBoundary={handleHistoryBoundaryNavigation}
+        onCommandAutocomplete={handleCommandAutocomplete}
+        onSubmit={() => submit(draft())}
+        onInputRef={(input) => {
+          chatInputRef = input;
+        }}
         focused={!authModalVisible()}
         canSend={canSend()}
         replying={replying()}
         status={status()}
         hasError={!!bootError()}
+        commandInlineSuggestion={commandInlineSuggestion()}
       />
 
       {/* OAuth progress modal */}
@@ -1481,4 +1798,9 @@ function App() {
   );
 }
 
-render(() => <App />);
+render(() => <App />, {
+  useKittyKeyboard: {
+    disambiguate: true,
+    events: true,
+  },
+});

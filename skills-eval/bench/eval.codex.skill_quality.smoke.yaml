@@ -1,0 +1,21 @@
+tasks_glob: "tasks/testgen_*.yaml"
+trials: 1
+timeout_s: 300
+seed: 20260303
+skills:
+  codex_no_skill:
+    type: command
+    command: "../scripts/run_codex_no_skill.sh"
+    shell: zsh
+  codex_skill_general:
+    type: command
+    command: "../scripts/run_codex_skill_general.sh"
+    shell: zsh
+  codex_skill_aaa_lite:
+    type: command
+    command: "../scripts/run_codex_skill_aaa_lite.sh"
+    shell: zsh
+  codex_skill_aaa_full:
+    type: command
+    command: "../scripts/run_codex_skill_aaa_full.sh"
+    shell: zsh
