@@ -24,6 +24,8 @@ import {
   type ConsentRequestPayload,
   type UserFeedbackPayload,
 } from "@google/gemini-cli-core/dist/src/utils/events.js";
+import { buildSystemPrompt, composeSystemPrompt } from "./prompt/system";
+import { ToolRegistry, type ToolEvent } from "./tool/registry";
 import {
   For,
   Show,
@@ -67,6 +69,7 @@ const theme = {
   roleUser: "#b8a04e",       // antique gold for user
   roleAssistant: "#d4af37",  // rich gold for assistant
   roleSystem: "#6b5f4d",     // muted bronze for system
+  roleTool: "#e8c547",       // bright gold for tool events
 
   // Specific elements
   inputBg: "#0f0f0f",
@@ -77,13 +80,25 @@ const theme = {
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type MessageRole = "system" | "user" | "assistant";
+type MessageRole = "system" | "user" | "assistant" | "tool";
+
+/** Status of a single tool invocation within a group. */
+interface ToolCallStatus {
+  callId: string;
+  name: string;
+  description?: string;
+  status: "running" | "ok" | "error";
+  durationMs?: number;
+  error?: string;
+}
 
 interface TranscriptMessage {
   id: number;
   role: MessageRole;
   text: string;
   streaming?: boolean;
+  /** When role === "tool", structured tool call data for the group. */
+  toolCalls?: ToolCallStatus[];
 }
 
 interface RuntimeClient {
@@ -123,6 +138,7 @@ const DEFAULT_MODEL = process.env.GENAI_MODEL ?? "gemini-2.5-flash";
 const syntaxStyle = SyntaxStyle.create();
 const SLASH_COMMANDS: SlashCommandDefinition[] = [
   { name: "help", completion: "/help" },
+  { name: "tools", completion: "/tools" },
   { name: "auth", completion: "/auth " },
   { name: "connect", completion: "/connect" },
   { name: "model", completion: "/model " },
@@ -515,6 +531,8 @@ function roleLabel(role: MessageRole): string {
       return "YOU";
     case "system":
       return "SYS";
+    case "tool":
+      return "TOOL";
   }
 }
 
@@ -526,6 +544,8 @@ function roleColor(role: MessageRole): string {
       return theme.textDim;
     case "system":
       return theme.textMuted;
+    case "tool":
+      return theme.roleTool;
   }
 }
 
@@ -537,6 +557,8 @@ function roleMessageColor(role: MessageRole): string {
       return theme.textDim;
     case "system":
       return theme.textMuted;
+    case "tool":
+      return theme.yellow;
   }
 }
 
@@ -567,48 +589,146 @@ function AnimatedDots(props: { color?: string; speed?: number }) {
   );
 }
 
+function ToolCallLine(props: { call: ToolCallStatus }) {
+  const isRunning = () => props.call.status === "running";
+  const isError = () => props.call.status === "error";
+
+  const icon = () => {
+    if (isRunning()) return "◆";
+    if (isError()) return "✗";
+    return "✓";
+  };
+
+  const iconColor = () => {
+    if (isRunning()) return theme.yellow;
+    if (isError()) return theme.red;
+    return theme.green;
+  };
+
+  const label = () => {
+    const desc = props.call.description;
+    if (desc) return desc;
+    return props.call.name;
+  };
+
+  const timing = () => {
+    const ms = props.call.durationMs;
+    if (ms === undefined) return "";
+    if (ms < 1000) return ` ${ms}ms`;
+    return ` ${(ms / 1000).toFixed(1)}s`;
+  };
+
+  return (
+    <text>
+      <span style={{ fg: iconColor() }}>{icon()}</span>
+      <Show when={isRunning()}>
+        <AnimatedDots color={theme.textMuted} speed={200} />
+      </Show>
+      <span style={{ fg: theme.textDim }}>{" "}{label()}</span>
+      <Show when={!isRunning() && timing()}>
+        <span style={{ fg: theme.textMuted }}>{timing()}</span>
+      </Show>
+      <Show when={isError() && props.call.error}>
+        <span style={{ fg: theme.red }}>{" "}— {props.call.error}</span>
+      </Show>
+    </text>
+  );
+}
+
+function ToolCallGroupSummary(props: { calls: ToolCallStatus[] }) {
+  const okCount = () => props.calls.filter((c) => c.status === "ok").length;
+  const errCount = () => props.calls.filter((c) => c.status === "error").length;
+  const totalMs = () =>
+    props.calls.reduce((sum, c) => sum + (c.durationMs ?? 0), 0);
+
+  const timing = () => {
+    const ms = totalMs();
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
+  return (
+    <box marginBottom={1}>
+      <text>
+        <Show when={okCount() > 0}>
+          <span style={{ fg: theme.green }}>{"✓ "}{okCount()} done</span>
+        </Show>
+        <Show when={errCount() > 0}>
+          <span style={{ fg: theme.red }}>
+            {okCount() > 0 ? "  " : ""}{"✗ "}{errCount()} failed
+          </span>
+        </Show>
+        <span style={{ fg: theme.textMuted }}>{" "}({timing()})</span>
+      </text>
+    </box>
+  );
+}
+
+function ToolCallGroup(props: { calls: ToolCallStatus[] }) {
+  const allSettled = () => props.calls.every((c) => c.status !== "running");
+
+  return (
+    <Show
+      when={!allSettled()}
+      fallback={<ToolCallGroupSummary calls={props.calls} />}
+    >
+      <box flexDirection="column" marginBottom={1}>
+        <For each={props.calls}>
+          {(call) => <ToolCallLine call={call} />}
+        </For>
+      </box>
+    </Show>
+  );
+}
+
 function MessageBubble(props: { message: TranscriptMessage }) {
   const isStreaming = () => props.message.streaming;
   const role = () => props.message.role;
   const text = () => props.message.text;
+  const toolCalls = () => props.message.toolCalls;
   const selectableMarkdownProps = { selectable: true } as any;
 
   return (
-    <box flexDirection="column" marginBottom={1}>
-      <box flexDirection="row" marginBottom={0}>
-        <text>
-          <span style={{ fg: roleColor(role()) }}>
-            <strong>{roleLabel(role())}</strong>
-          </span>
-          <Show when={isStreaming()}>
-            <AnimatedDots color={theme.textDim} />
-          </Show>
-        </text>
-      </box>
-      <Show when={role() === "assistant" && text()}>
-        <box>
-          <markdown
-            {...selectableMarkdownProps}
-            content={text()}
-            streaming={isStreaming()}
-            syntaxStyle={syntaxStyle}
-          />
-        </box>
-      </Show>
-      <Show when={role() !== "assistant" && (text() || isStreaming())}>
-        <box>
-          <text selectable>
-            <span
-              style={{
-                fg: roleMessageColor(role()),
-              }}
-            >
-              {text() || (isStreaming() ? "..." : "")}
+    <Show
+      when={role() !== "tool" || !toolCalls()?.length}
+      fallback={<ToolCallGroup calls={toolCalls()!} />}
+    >
+      <box flexDirection="column" marginBottom={1}>
+        <box flexDirection="row" marginBottom={0}>
+          <text>
+            <span style={{ fg: roleColor(role()) }}>
+              <strong>{roleLabel(role())}</strong>
             </span>
+            <Show when={isStreaming()}>
+              <AnimatedDots color={theme.textDim} />
+            </Show>
           </text>
         </box>
-      </Show>
-    </box>
+        <Show when={role() === "assistant" && text()}>
+          <box>
+            <markdown
+              {...selectableMarkdownProps}
+              content={text()}
+              streaming={isStreaming()}
+              syntaxStyle={syntaxStyle}
+            />
+          </box>
+        </Show>
+        <Show when={role() !== "assistant" && (text() || isStreaming())}>
+          <box>
+            <text selectable>
+              <span
+                style={{
+                  fg: roleMessageColor(role()),
+                }}
+              >
+                {text() || (isStreaming() ? "..." : "")}
+              </span>
+            </text>
+          </box>
+        </Show>
+      </box>
+    </Show>
   );
 }
 
@@ -1070,14 +1190,23 @@ function App() {
     event.stopPropagation();
   };
 
+  // Track the current tool group message so consecutive tool calls get merged.
+  let activeToolGroupId: number | null = null;
+
   const appendMessage = (
     role: MessageRole,
     text: string,
     streaming = false,
   ): number => {
+    if (role !== "tool") activeToolGroupId = null;
     const id = nextId++;
     setMessages((current) => [...current, { id, role, text, streaming }]);
     return id;
+  };
+
+  const appendToolEvent = (text: string): number => {
+    const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
+    return appendMessage("tool", `[${timestamp}] ${text}`);
   };
 
   const updateMessage = (
@@ -1090,6 +1219,98 @@ function App() {
       ),
     );
   };
+
+  const handleToolEvent = (event: ToolEvent): void => {
+    if (event.type === "call") {
+      const newCall: ToolCallStatus = {
+        callId: event.callId,
+        name: event.name,
+        description: event.description,
+        status: "running",
+      };
+
+      // Check if we can append to the existing tool group.
+      // We look for the group by id anywhere in the list — it may not be the
+      // last message because a streaming assistant bubble can sit after it.
+      const current = messages();
+      const groupMsg = activeToolGroupId !== null
+        ? current.find((m) => m.id === activeToolGroupId)
+        : null;
+
+      if (groupMsg && groupMsg.role === "tool" && groupMsg.toolCalls) {
+        // Append to existing group
+        setMessages((msgs) =>
+          msgs.map((m) =>
+            m.id === activeToolGroupId
+              ? {
+                  ...m,
+                  text: "",
+                  toolCalls: [...(m.toolCalls ?? []), newCall],
+                }
+              : m,
+          ),
+        );
+      } else {
+        // Create a new tool group message.
+        // If the last message is a streaming assistant bubble, insert the
+        // tool group just before it so tools appear in chronological order.
+        const id = nextId++;
+        activeToolGroupId = id;
+        const toolMsg: TranscriptMessage = {
+          id,
+          role: "tool" as MessageRole,
+          text: "",
+          toolCalls: [newCall],
+        };
+
+        setMessages((msgs) => {
+          const last = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+          if (last && last.role === "assistant" && last.streaming) {
+            // Insert before the streaming assistant message
+            return [...msgs.slice(0, -1), toolMsg, last];
+          }
+          return [...msgs, toolMsg];
+        });
+      }
+    } else {
+      // result event — update the matching call entry in-place
+      setMessages((msgs) =>
+        msgs.map((m) => {
+          if (m.role !== "tool" || !m.toolCalls) return m;
+          const idx = m.toolCalls.findIndex((c) => c.callId === event.callId);
+          if (idx === -1) return m;
+          const updated = [...m.toolCalls];
+          const existing = updated[idx]!;
+          updated[idx] = {
+            callId: existing.callId,
+            name: existing.name,
+            description: existing.description,
+            status: event.status,
+            durationMs: event.durationMs,
+            error: event.error,
+          };
+          return { ...m, toolCalls: updated };
+        }),
+      );
+    }
+  };
+
+  const toolRegistry = new ToolRegistry({
+    directory: process.cwd(),
+    onEvent: (message) => appendToolEvent(message),
+    onToolEvent: handleToolEvent,
+  });
+  const callableTool = toolRegistry.callableTool();
+  const buildSessionSystemInstruction = (): string =>
+    composeSystemPrompt(
+      buildSystemPrompt({
+        cwd: process.cwd(),
+        platform: process.platform,
+        date: new Date().toDateString(),
+        tools: toolRegistry.ids(),
+      }),
+      systemInstruction(),
+    );
 
   const setConnectedBanner = (
     activeClient: RuntimeClient,
@@ -1127,8 +1348,14 @@ function App() {
       });
       setClient(activeClient);
 
-      const instruction = systemInstruction().trim();
-      const config = instruction ? { systemInstruction: instruction } : undefined;
+      const instruction = buildSessionSystemInstruction();
+      const config = {
+        systemInstruction: instruction,
+        tools: [callableTool],
+        automaticFunctionCalling: {
+          maximumRemoteCalls: 8,
+        },
+      };
 
       if (activeClient.authType === GeminiAuthType.LOGIN_WITH_GOOGLE) {
         setStatus("Authenticating...");
@@ -1272,7 +1499,7 @@ function App() {
   const showHelp = (): void => {
     appendMessage(
       "system",
-      "/help · /auth [google|vertex|gemini|compute|auto] · /connect · /model <name> · /system <instruction> · /sysmsgs [on|off|toggle] · /clear · /exit",
+      "/help · /tools · /auth [google|vertex|gemini|compute|auto] · /connect · /model <name> · /system <instruction> · /sysmsgs [on|off|toggle] · /clear · /exit",
     );
   };
 
@@ -1290,6 +1517,10 @@ function App() {
     switch (command) {
       case "help": {
         showHelp();
+        return true;
+      }
+      case "tools": {
+        appendMessage("system", `Registered tools: ${toolRegistry.ids().join(", ")}`);
         return true;
       }
       case "auth": {
@@ -1473,12 +1704,12 @@ function App() {
 
     try {
       if (generator) {
-        const instruction = systemInstruction().trim();
+        const instruction = buildSessionSystemInstruction();
         const stream = await generator.generateContentStream(
           {
             model: model(),
             contents: [...oauthHistory(), userContent(prompt)],
-            config: instruction ? { systemInstruction: instruction } : undefined,
+            config: { systemInstruction: instruction },
           },
           `${Date.now()}`,
           LlmRole.MAIN,
@@ -1530,6 +1761,22 @@ function App() {
         text: `Error: ${message}`,
         streaming: false,
       });
+      // Mark any still-running tool calls as failed so they don't spin forever.
+      setMessages((msgs) =>
+        msgs.map((m) => {
+          if (m.role !== "tool" || !m.toolCalls) return m;
+          const hasRunning = m.toolCalls.some((c) => c.status === "running");
+          if (!hasRunning) return m;
+          return {
+            ...m,
+            toolCalls: m.toolCalls.map((c) =>
+              c.status === "running"
+                ? { ...c, status: "error" as const, error: "aborted" }
+                : c,
+            ),
+          };
+        }),
+      );
       setStatus("Last request failed");
     } finally {
       setReplying(false);
