@@ -1,4 +1,6 @@
 ---
+import { InteractiveTitle } from '@/components/interactive-title'
+
 const work = [
   {
     title: 'Argus',
@@ -64,7 +66,13 @@ const nav = [
       <main>
         <section class="hero" aria-labelledby="hero-title">
           <p class="eyebrow">AI Engineer <span></span> Systems Builder</p>
-          <h1 id="hero-title">Building intelligent systems.</h1>
+          <InteractiveTitle
+            client:visible
+            id="hero-title"
+            text="Building intelligent systems."
+            className="home-title"
+            wrapText={false}
+          />
           <p class="lede">AI, code intelligence, and developer tools.</p>
           <p class="intro">
             Staff-level engineer focused on building precise systems for
@@ -269,14 +277,15 @@ const nav = [
     background: #20dbe9;
   }
 
-  h1 {
+  :global(.home-title) {
     margin: 0;
-    max-width: 58rem;
+    max-width: none;
     color: #ffffff;
     font-size: clamp(3.35rem, 5.1vw, 6.55rem);
     font-weight: 400;
     line-height: 0.96;
     letter-spacing: -0.045em;
+    white-space: nowrap;
     text-shadow: 0 0 24px rgba(255, 255, 255, 0.16);
   }
 
@@ -545,8 +554,9 @@ const nav = [
       padding-top: 4.6rem;
     }
 
-    h1 {
+    :global(.home-title) {
       font-size: clamp(3rem, 15vw, 5rem);
+      white-space: normal;
     }
 
     .lede {

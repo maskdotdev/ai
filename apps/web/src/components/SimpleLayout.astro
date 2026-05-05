@@ -1,0 +1,33 @@
+---
+import { Container } from '@/components/container'
+import { InteractiveTitle } from '@/components/interactive-title'
+
+interface Props {
+  title: string
+  intro: string
+}
+
+const { title, intro } = Astro.props
+const hasChildren = Astro.slots.has('default')
+---
+
+<Container className="mt-16 sm:mt-32">
+  <header class="max-w-2xl">
+    <InteractiveTitle
+      client:visible
+      text={title}
+      className="heading-glow font-serif text-4xl tracking-tight text-white sm:text-5xl"
+    />
+    <div class="gradient-line animate-reveal-line mt-6 w-16"></div>
+    <p class="mt-6 text-base leading-relaxed font-light text-neutral-500">
+      {intro}
+    </p>
+  </header>
+  {
+    hasChildren && (
+      <div class="mt-16 sm:mt-20">
+        <slot />
+      </div>
+    )
+  }
+</Container>
