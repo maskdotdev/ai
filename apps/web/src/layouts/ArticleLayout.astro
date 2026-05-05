@@ -1,42 +1,418 @@
 ---
-import { Container } from '@/components/container'
-import { Prose } from '@/components/prose'
 import { formatDate } from '@/lib/format-date'
 
 interface Props {
   title: string
+  description: string
   date: string | Date
   readingTimeMinutes?: number
+  nextArticle?: {
+    title: string
+    slug: string
+  }
 }
 
-const { title, date, readingTimeMinutes } = Astro.props
+const { title, description, date, readingTimeMinutes, nextArticle } = Astro.props
+const isoDate = date instanceof Date ? date.toISOString().slice(0, 10) : date
+const nav = [
+  { label: 'Work', href: '/#work' },
+  { label: 'About', href: '/uses' },
+  { label: 'Writing', href: '/articles', active: true },
+  { label: 'Contact', href: 'mailto:hello@mask.dev' },
+]
 ---
 
-<Container className="mt-16 lg:mt-32">
-  <div class="xl:relative">
-    <div class="mx-auto max-w-2xl">
-      <article>
-        <header class="flex flex-col">
-          <h1 class="heading-glow mt-6 font-serif text-4xl tracking-tight text-white sm:text-5xl">
-            {title}
-          </h1>
-          <div class="order-first flex items-center gap-3 text-sm text-neutral-600">
-            <time datetime={date instanceof Date ? date.toISOString().slice(0, 10) : date} class="flex items-center">
-              <span class="h-4 w-0.5 rounded-full bg-gradient-to-b from-neutral-500 to-neutral-700"></span>
-              <span class="ml-3">{formatDate(date)}</span>
-            </time>
-            {readingTimeMinutes && (
-              <span class="rounded-full bg-white/5 px-3 py-1 text-[11px] tracking-wide text-neutral-400 ring-1 ring-white/10">
-                {readingTimeMinutes} min read
-              </span>
-            )}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} - mask.dev</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="article-shell">
+    <div class="scene-noise" aria-hidden="true"></div>
+    <div class="scene-glow" aria-hidden="true"></div>
+    <div class="scene-frame">
+      <header class="site-header" aria-label="Primary navigation">
+        <a class="brand" href="/" aria-label="mask.dev home">
+          <span>mask</span><span>.dev</span>
+        </a>
+        <nav>
+          {nav.map((item) => (
+            <a class:list={{ active: item.active }} href={item.href}>{item.label}</a>
+          ))}
+        </nav>
+      </header>
+
+      <main class="article-wrap">
+        <article>
+          <header class="article-header">
+            <p class="meta">
+              <span>AI Review</span>
+              <i>/</i>
+              <time datetime={isoDate}>{formatDate(date)}</time>
+              {readingTimeMinutes && (
+                <>
+                  <i>/</i>
+                  <span>{readingTimeMinutes} min read</span>
+                </>
+              )}
+            </p>
+            <h1>{title}</h1>
+            <p class="dek">{description}</p>
+          </header>
+
+          <div class="article-body" data-mdx-content>
+            <slot />
           </div>
-          <div class="gradient-line mt-8 w-16"></div>
-        </header>
-        <Prose className="mt-8" data-mdx-content>
-          <slot />
-        </Prose>
-      </article>
+
+          {nextArticle && (
+            <footer class="next-note">
+              <p>Next Note</p>
+              <a href={`/articles/${nextArticle.slug}`}>
+                {nextArticle.title}
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h13m-5-5 5 5-5 5" />
+                </svg>
+              </a>
+            </footer>
+          )}
+        </article>
+      </main>
     </div>
-  </div>
-</Container>
+  </body>
+</html>
+
+<style is:global>
+  html {
+    background: #010405;
+    scroll-behavior: smooth;
+  }
+
+  .article-shell {
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 59% 28%, rgba(7, 209, 226, 0.08), transparent 21rem),
+      linear-gradient(135deg, #010405 0%, #030606 54%, #010303 100%);
+    color: #f6f6f3;
+    font-family:
+      'DM Sans',
+      ui-sans-serif,
+      system-ui,
+      sans-serif;
+  }
+
+  .scene-frame {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    width: min(100%, 1920px);
+    margin: 0 auto;
+    padding: clamp(1.5rem, 3.25vw, 3.25rem) clamp(1.25rem, 4.2vw, 4.25rem)
+      clamp(3rem, 5vw, 5rem);
+  }
+
+  .scene-noise,
+  .scene-glow {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+  }
+
+  .scene-noise {
+    z-index: 3;
+    opacity: 0.1;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 4px 4px;
+    mix-blend-mode: screen;
+  }
+
+  .scene-glow {
+    z-index: 0;
+    background:
+      radial-gradient(ellipse at 50% 44%, transparent 0%, transparent 48%, rgba(0, 0, 0, 0.76) 100%),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.72), transparent 24%, transparent 76%, rgba(0, 0, 0, 0.72));
+  }
+
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    color: #f6f6f3;
+    font-size: clamp(1.55rem, 1.85vw, 2rem);
+    font-weight: 400;
+    line-height: 1;
+    text-decoration: none;
+    letter-spacing: 0;
+  }
+
+  .brand span:last-child {
+    color: #20dbe9;
+  }
+
+  nav {
+    display: flex;
+    gap: clamp(1.4rem, 3vw, 3.25rem);
+  }
+
+  nav a {
+    position: relative;
+    color: rgba(246, 246, 243, 0.7);
+    font-size: 0.98rem;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  nav a:hover,
+  nav a.active {
+    color: #20dbe9;
+  }
+
+  nav a.active::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.82rem;
+    width: 0.28rem;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: #20dbe9;
+    box-shadow: 0 0 13px rgba(32, 219, 233, 0.8);
+    transform: translateX(-50%);
+  }
+
+  .article-wrap {
+    width: min(100%, 44rem);
+    margin: clamp(5rem, 9.5vw, 10rem) auto 0;
+  }
+
+  .article-header {
+    margin-bottom: 2.7rem;
+  }
+
+  .meta,
+  .next-note p {
+    display: flex;
+    align-items: center;
+    gap: 0.82rem;
+    margin: 0;
+    color: rgba(246, 246, 243, 0.68);
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .meta span:first-child,
+  .next-note p {
+    color: #20dbe9;
+  }
+
+  .meta i {
+    color: rgba(246, 246, 243, 0.34);
+    font-style: normal;
+  }
+
+  h1 {
+    margin: 1.35rem 0 0;
+    color: #fff;
+    font-size: clamp(3rem, 3.45vw, 3.9rem);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.055em;
+    text-shadow: 0 0 22px rgba(255, 255, 255, 0.13);
+    overflow-wrap: normal;
+  }
+
+  .dek {
+    max-width: 43rem;
+    margin: 1.25rem 0 0;
+    color: rgba(246, 246, 243, 0.68);
+    font-size: clamp(1.25rem, 1.55vw, 1.55rem);
+    font-weight: 300;
+    line-height: 1.42;
+    letter-spacing: -0.02em;
+  }
+
+  .article-body {
+    color: rgba(246, 246, 243, 0.74);
+    font-size: clamp(1.02rem, 1.1vw, 1.13rem);
+    font-weight: 300;
+    line-height: 1.62;
+  }
+
+  .article-body > * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .article-body > * + * {
+    margin-top: 1.15rem;
+  }
+
+  .article-body h2,
+  .article-body h3 {
+    color: #f9f9f6;
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.1);
+  }
+
+  .article-body h2 {
+    margin-top: 2.75rem;
+    font-size: clamp(1.75rem, 2vw, 2.35rem);
+    line-height: 1.12;
+  }
+
+  .article-body h3 {
+    margin-top: 2.25rem;
+    font-size: clamp(1.35rem, 1.55vw, 1.75rem);
+    line-height: 1.2;
+  }
+
+  .article-body p,
+  .article-body li {
+    max-width: 47rem;
+  }
+
+  .article-body a {
+    color: #f6f6f3;
+    text-decoration-color: rgba(32, 219, 233, 0.48);
+    text-underline-offset: 0.18em;
+  }
+
+  .article-body a:hover {
+    color: #20dbe9;
+  }
+
+  .article-body blockquote {
+    margin: 1.85rem 0;
+    padding: 0.2rem 0 0.2rem 1.9rem;
+    border-left: 2px solid #20dbe9;
+    color: rgba(246, 246, 243, 0.8);
+    font-style: italic;
+  }
+
+  .article-body blockquote p {
+    margin: 0;
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 1.4rem;
+  }
+
+  .article-body li + li {
+    margin-top: 0.45rem;
+  }
+
+  .article-body code {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #f6f6f3;
+    font-size: 0.9em;
+    padding: 0.1rem 0.32rem;
+  }
+
+  .article-body pre {
+    overflow-x: auto;
+    margin: 1.8rem 0;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .article-body pre code {
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .article-body .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.4rem 0;
+  }
+
+  .next-note {
+    margin-top: clamp(3.6rem, 5.8vw, 6rem);
+  }
+
+  .next-note a {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    color: #f6f6f3;
+    font-size: 1rem;
+    text-decoration: none;
+  }
+
+  .next-note svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: none;
+    stroke: #20dbe9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+    transition: transform 160ms ease;
+  }
+
+  .next-note a:hover svg {
+    transform: translateX(0.3rem);
+  }
+
+  @media (max-width: 680px) {
+    .scene-frame {
+      padding: 1.35rem 1.1rem 3rem;
+    }
+
+    .site-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    nav {
+      width: 100%;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+
+    nav a {
+      font-size: 0.88rem;
+    }
+
+    .article-wrap {
+      margin-top: 4.6rem;
+    }
+
+    .meta {
+      flex-wrap: wrap;
+      gap: 0.52rem;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 13vw, 4.35rem);
+    }
+  }
+</style>

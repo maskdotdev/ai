@@ -1,54 +1,362 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro'
-import { Card } from '@/components/card'
-import { SimpleLayout } from '@/components/simple-layout'
 import { getAllArticles, type ArticleWithSlug } from '@/lib/articles'
 import { formatDate } from '@/lib/format-date'
 
 const articles = await getAllArticles()
-const publishedCount = articles.filter((article) => !article.draft).length
+const nav = [
+  { label: 'Work', href: '/#work' },
+  { label: 'About', href: '/uses' },
+  { label: 'Writing', href: '/articles', active: true },
+  { label: 'Contact', href: 'mailto:hello@mask.dev' },
+]
 ---
 
-<BaseLayout
-  title="Articles - Kiyotaka"
-  description="All of my long-form thoughts on software, ai, product design, and more, collected in chronological order."
->
-  <SimpleLayout
-    title="Writing on software, artificial intelligence, and math."
-    intro="All of my long-form thoughts on software, ai, product design, and more, collected in chronological order."
-  >
-    <div class="md:border-l md:border-white/5 md:pl-6">
-      <p class="mb-8 text-xs tracking-widest text-neutral-600 uppercase">
-        {publishedCount} published article{publishedCount === 1 ? '' : 's'}
-      </p>
-      <div class="flex max-w-3xl flex-col space-y-16">
-        {articles.map((article: ArticleWithSlug) => (
-          <article class="md:grid md:grid-cols-4 md:items-baseline">
-            <Card className="md:col-span-3">
-              <Card.Title href={`/articles/${article.slug}`}>
-                {article.title}
-                {article.draft && (
-                  <span class="ml-2 rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-500 ring-1 ring-white/10">
-                    Draft
-                  </span>
-                )}
-              </Card.Title>
-              <Card.Eyebrow as="time" datetime={article.date} className="md:hidden" decorate>
-                {formatDate(article.date)}
-                <span class="mx-2 text-neutral-700">•</span>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Writing - mask.dev</title>
+    <meta
+      name="description"
+      content="Notes on AI systems, code intelligence, developer tools, math, and software architecture."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="writing-shell">
+    <div class="scene-noise" aria-hidden="true"></div>
+    <div class="scene-glow" aria-hidden="true"></div>
+    <div class="scene-frame">
+      <header class="site-header" aria-label="Primary navigation">
+        <a class="brand" href="/" aria-label="mask.dev home">
+          <span>mask</span><span>.dev</span>
+        </a>
+        <nav>
+          {nav.map((item) => (
+            <a class:list={{ active: item.active }} href={item.href}>{item.label}</a>
+          ))}
+        </nav>
+      </header>
+
+      <main class="writing-wrap">
+        <section class="writing-hero" aria-labelledby="writing-title">
+          <p class="eyebrow">Writing</p>
+          <h1 id="writing-title">Notes on intelligent systems.</h1>
+          <p>
+            Essays on AI infrastructure, code intelligence, math, and the
+            developer tools worth building.
+          </p>
+        </section>
+
+        <section class="article-list" aria-label="Articles">
+          {articles.map((article: ArticleWithSlug) => (
+            <a class="article-row" href={`/articles/${article.slug}`}>
+              <span class="article-meta">
+                <span>AI Review</span>
+                <i>/</i>
+                <time datetime={article.date}>{formatDate(article.date)}</time>
+                <i>/</i>
                 <span>{article.readingTimeMinutes} min read</span>
-              </Card.Eyebrow>
-              <Card.Description>{article.description}</Card.Description>
-              <Card.Cta>Read article</Card.Cta>
-            </Card>
-            <Card.Eyebrow as="time" datetime={article.date} className="mt-1 hidden md:block">
-              {formatDate(article.date)}
-              <span class="mx-2 text-neutral-700">•</span>
-              <span>{article.readingTimeMinutes} min read</span>
-            </Card.Eyebrow>
-          </article>
-        ))}
-      </div>
+              </span>
+              <span class="article-title">
+                {article.title}
+                {article.draft && <em>Draft</em>}
+              </span>
+              <span class="article-description">{article.description}</span>
+              <span class="article-arrow" aria-hidden="true">
+                <svg viewBox="0 0 40 24">
+                  <path d="M4 12h26" />
+                  <path d="m23 5 7 7-7 7" />
+                </svg>
+              </span>
+            </a>
+          ))}
+        </section>
+      </main>
     </div>
-  </SimpleLayout>
-</BaseLayout>
+  </body>
+</html>
+
+<style>
+  :global(html) {
+    background: #010405;
+    scroll-behavior: smooth;
+  }
+
+  :global(.writing-shell) {
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 61% 30%, rgba(7, 209, 226, 0.08), transparent 22rem),
+      linear-gradient(135deg, #010405 0%, #030606 54%, #010303 100%);
+    color: #f6f6f3;
+    font-family:
+      'DM Sans',
+      ui-sans-serif,
+      system-ui,
+      sans-serif;
+  }
+
+  .scene-frame {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    width: min(100%, 1920px);
+    margin: 0 auto;
+    padding: clamp(1.5rem, 3.25vw, 3.25rem) clamp(1.25rem, 4.2vw, 4.25rem)
+      clamp(3rem, 5vw, 5rem);
+  }
+
+  .scene-noise,
+  .scene-glow {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+  }
+
+  .scene-noise {
+    z-index: 3;
+    opacity: 0.1;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 4px 4px;
+    mix-blend-mode: screen;
+  }
+
+  .scene-glow {
+    z-index: 0;
+    background:
+      radial-gradient(ellipse at 50% 44%, transparent 0%, transparent 48%, rgba(0, 0, 0, 0.76) 100%),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.72), transparent 24%, transparent 76%, rgba(0, 0, 0, 0.72));
+  }
+
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    color: #f6f6f3;
+    font-size: clamp(1.55rem, 1.85vw, 2rem);
+    font-weight: 400;
+    line-height: 1;
+    text-decoration: none;
+    letter-spacing: 0;
+  }
+
+  .brand span:last-child {
+    color: #20dbe9;
+  }
+
+  nav {
+    display: flex;
+    gap: clamp(1.4rem, 3vw, 3.25rem);
+  }
+
+  nav a {
+    position: relative;
+    color: rgba(246, 246, 243, 0.7);
+    font-size: 0.98rem;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  nav a:hover,
+  nav a.active {
+    color: #20dbe9;
+  }
+
+  nav a.active::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.82rem;
+    width: 0.28rem;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: #20dbe9;
+    box-shadow: 0 0 13px rgba(32, 219, 233, 0.8);
+    transform: translateX(-50%);
+  }
+
+  .writing-wrap {
+    width: min(100%, 44rem);
+    margin: clamp(5rem, 9.5vw, 10rem) auto 0;
+  }
+
+  .eyebrow,
+  .article-meta {
+    color: #20dbe9;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .writing-hero h1 {
+    margin: 1.35rem 0 0;
+    color: #fff;
+    font-size: clamp(3rem, 3.45vw, 3.9rem);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.055em;
+    text-shadow: 0 0 22px rgba(255, 255, 255, 0.13);
+  }
+
+  .writing-hero p:last-child {
+    max-width: 43rem;
+    margin: 1.25rem 0 0;
+    color: rgba(246, 246, 243, 0.68);
+    font-size: clamp(1.2rem, 1.45vw, 1.45rem);
+    font-weight: 300;
+    line-height: 1.46;
+    letter-spacing: -0.02em;
+  }
+
+  .article-list {
+    margin-top: clamp(4rem, 6vw, 6rem);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .article-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 2rem;
+    gap: 0.7rem 1.5rem;
+    padding: 2rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.13);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .article-row:hover {
+    border-color: rgba(32, 219, 233, 0.24);
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.72rem;
+    color: rgba(246, 246, 243, 0.62);
+  }
+
+  .article-meta span:first-child {
+    color: #20dbe9;
+  }
+
+  .article-meta i {
+    color: rgba(246, 246, 243, 0.32);
+    font-style: normal;
+  }
+
+  .article-title {
+    grid-column: 1;
+    color: #fff;
+    font-size: clamp(2rem, 2.7vw, 3.15rem);
+    font-weight: 500;
+    line-height: 1.06;
+    letter-spacing: -0.05em;
+  }
+
+  .article-title em {
+    margin-left: 0.8rem;
+    color: #20dbe9;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: 0.72rem;
+    font-style: normal;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  .article-description {
+    grid-column: 1;
+    max-width: 40rem;
+    color: rgba(246, 246, 243, 0.62);
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  .article-arrow {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    display: grid;
+    width: 2.65rem;
+    height: 2.65rem;
+    align-self: center;
+    place-items: center;
+    border: 1px solid rgba(32, 219, 233, 0.16);
+    border-radius: 999px;
+    background: rgba(32, 219, 233, 0.035);
+    color: rgba(32, 219, 233, 0.72);
+    box-shadow: inset 0 0 18px rgba(32, 219, 233, 0.04);
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .article-arrow svg {
+    width: 1.9rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+  }
+
+  .article-row:hover .article-arrow {
+    border-color: rgba(32, 219, 233, 0.42);
+    color: #20dbe9;
+    box-shadow: 0 0 20px rgba(32, 219, 233, 0.14);
+    transform: translateX(0.3rem);
+  }
+
+  @media (max-width: 680px) {
+    .scene-frame {
+      padding: 1.35rem 1.1rem 3rem;
+    }
+
+    .site-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    nav {
+      width: 100%;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+
+    nav a {
+      font-size: 0.88rem;
+    }
+
+    .writing-wrap {
+      margin-top: 4.6rem;
+    }
+
+    .writing-hero h1 {
+      font-size: clamp(3rem, 13vw, 4.35rem);
+    }
+  }
+</style>

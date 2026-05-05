@@ -1,10 +1,10 @@
 ---
 import { getCollection } from 'astro:content'
 
-import BaseLayout from '@/layouts/BaseLayout.astro'
 import ArticleLayout from '@/layouts/ArticleLayout.astro'
 import { useMDXComponents } from '@/mdx-components'
 import { getReadingTimeMinutes } from '@/lib/reading-time'
+import { getAllArticles } from '@/lib/articles'
 
 export async function getStaticPaths() {
   const entries = await getCollection('articles')
@@ -19,14 +19,17 @@ const { entry } = Astro.props
 const { Content } = await entry.render()
 const components = useMDXComponents({})
 const readingTimeMinutes = getReadingTimeMinutes(entry.body)
+const articles = await getAllArticles(true)
+const currentIndex = articles.findIndex((article) => article.slug === entry.slug)
+const nextArticle = articles[(currentIndex + 1) % articles.length]
 ---
 
-<BaseLayout title={`${entry.data.title} - Kiyotaka`} description={entry.data.description}>
-  <ArticleLayout
-    title={entry.data.title}
-    date={entry.data.date.toISOString().slice(0, 10)}
-    readingTimeMinutes={readingTimeMinutes}
-  >
-    <Content components={components} />
-  </ArticleLayout>
-</BaseLayout>
+<ArticleLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  date={entry.data.date.toISOString().slice(0, 10)}
+  readingTimeMinutes={readingTimeMinutes}
+  nextArticle={nextArticle && { title: nextArticle.title, slug: nextArticle.slug }}
+>
+  <Content components={components} />
+</ArticleLayout>
