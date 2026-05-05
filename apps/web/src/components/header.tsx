@@ -286,8 +286,12 @@ function Avatar({
   )
 }
 
-export function Header() {
-  const [pathname, setPathname] = useState('/')
+export function Header({
+  initialPathname,
+}: {
+  initialPathname: string
+}) {
+  const [pathname, setPathname] = useState(initialPathname)
 
   useEffect(() => {
     setPathname(window.location.pathname)
@@ -396,6 +400,16 @@ export function Header() {
     return () => {
       window.removeEventListener('scroll', updateStyles)
       window.removeEventListener('resize', updateStyles)
+      removeProperty('--content-offset')
+      removeProperty('--header-height')
+      removeProperty('--header-mb')
+      removeProperty('--header-position')
+      removeProperty('--header-inner-position')
+      removeProperty('--header-top')
+      removeProperty('--avatar-top')
+      removeProperty('--avatar-image-transform')
+      removeProperty('--avatar-border-transform')
+      removeProperty('--avatar-border-opacity')
     }
   }, [isHomePage])
 
