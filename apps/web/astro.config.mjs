@@ -17,6 +17,8 @@ const prettyCodeOptions = {
   defaultLang: 'plaintext',
 }
 
+const cacheScope = process.env.npm_lifecycle_event ?? 'default'
+
 export default defineConfig({
   integrations: [
     mdx({
@@ -29,4 +31,7 @@ export default defineConfig({
     }),
     react(),
   ],
+  vite: {
+    cacheDir: `node_modules/.vite-${cacheScope}`,
+  },
 })
