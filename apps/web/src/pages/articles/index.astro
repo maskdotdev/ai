@@ -133,9 +133,15 @@ const nav = [
   }
 
   .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-block: 0.35rem;
+    background: rgba(1, 4, 5, 0.72);
+    backdrop-filter: blur(18px);
   }
 
   .brand {

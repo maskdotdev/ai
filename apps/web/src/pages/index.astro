@@ -1,32 +1,14 @@
 ---
 import { InteractiveTitle } from '@/components/interactive-title'
+import { projects } from '@/lib/projects'
 
-const work = [
-  {
-    title: 'Argus',
-    description:
-      'AI-native code review systems that understand intent, context, and architecture.',
-    category: 'Review Systems',
-    href: '/projects',
-    icon: 'eye',
-  },
-  {
-    title: 'Sombra',
-    description:
-      'Graph database platforms for complex relationships and retrieval.',
-    category: 'Graph Database',
-    href: '/projects',
-    icon: 'grid',
-  },
-  {
-    title: 'Experiments',
-    description:
-      'Exploring AI tools and infrastructure that empower developers.',
-    category: 'AI Tools',
-    href: '/articles',
-    icon: 'flask',
-  },
-]
+const work = projects.map((project, index) => ({
+  title: project.title,
+  description: project.description,
+  category: project.category,
+  href: `/projects/${project.slug}`,
+  icon: ['eye', 'grid', 'flask'][index],
+}))
 
 const nav = [
   { label: 'Work', href: '#work' },
@@ -168,6 +150,7 @@ const nav = [
   .scene-frame {
     position: relative;
     z-index: 1;
+    box-sizing: border-box;
     display: flex;
     min-height: 100vh;
     width: min(100%, 1920px);
@@ -206,6 +189,15 @@ const nav = [
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-block: 0.35rem;
+    background: rgba(1, 4, 5, 0.72);
+    backdrop-filter: blur(18px);
   }
 
   .brand {
