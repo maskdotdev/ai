@@ -551,7 +551,13 @@ export function InteractiveTitle({
   return (
     <div
       ref={wrapRef}
-      style={{ position: 'relative', display: 'block', maxWidth: '100%' }}
+      style={{
+        position: 'relative',
+        display: 'block',
+        maxWidth: '100%',
+        overflow: 'clip',
+        overflowClipMargin: `${RADIUS * 1.45}px`,
+      }}
     >
       <Heading
         ref={headingRef}
