@@ -157,13 +157,23 @@ function buildLinks(points: Point[], size: number) {
   return links
 }
 
+function particleBudgetForText(lines: TitleLine[], size: number) {
+  const letterCount = lines.reduce(
+    (count, line) => count + line.text.replace(/\s/g, '').length,
+    0,
+  )
+  const pointsPerLetter = clamp(Math.round(size * 0.55), 18, 48)
+
+  return clamp(letterCount * pointsPerLetter, 90, 520)
+}
+
 export function InteractiveTitle({
   text,
   as: Heading = 'h1',
   className = '',
   id,
   trackingFactor = -0.035,
-  maxPoints = 260,
+  maxPoints,
   wrapText = true,
 }: InteractiveTitleProps) {
   const wrapRef = useRef<HTMLElement>(null)
@@ -304,11 +314,13 @@ export function InteractiveTitle({
         }
       }
 
+      const particleBudget = maxPoints ?? particleBudgetForText(state.lines, fontSize)
+
       state.points =
-        points.length > maxPoints
+        points.length > particleBudget
           ? Array.from(
-              { length: maxPoints },
-              (_, index) => points[Math.floor(index * (points.length / maxPoints))],
+              { length: particleBudget },
+              (_, index) => points[Math.floor(index * (points.length / particleBudget))],
             )
           : points
       state.links = buildLinks(state.points, fontSize)
