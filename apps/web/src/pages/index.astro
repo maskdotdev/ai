@@ -394,7 +394,7 @@ const nav = [
     grid-template-columns: 5.75rem minmax(12rem, 26vw) minmax(20rem, 1fr) 13rem 2rem;
     gap: 1.6rem;
     align-items: center;
-    min-height: 8.6rem;
+    min-height: 10rem;
     border-top: 1px solid rgba(255, 255, 255, 0.13);
     color: inherit;
     text-decoration: none;
@@ -428,11 +428,12 @@ const nav = [
     stroke-width: 1.8;
   }
 
-  .work-title {
+  :global(.work-title) {
     color: #fff;
-    font-size: clamp(2rem, 2.45vw, 3.55rem);
-    font-weight: 400;
-    letter-spacing: -0.05em;
+    font-size: clamp(3.25rem, 5.35vw, 6rem);
+    font-weight: 300;
+    letter-spacing: -0.045em;
+    line-height: 0.94;
   }
 
   .work-description {
@@ -510,7 +511,7 @@ const nav = [
     .work-row {
       grid-template-columns: 4.75rem 1fr 2rem;
       gap: 1rem;
-      padding: 1.45rem 0;
+      padding: 1.8rem 0;
     }
 
     .work-description,
@@ -588,8 +589,8 @@ const nav = [
       height: 1.55rem;
     }
 
-    .work-title {
-      font-size: 2rem;
+    :global(.work-title) {
+      font-size: clamp(3rem, 12vw, 4.6rem);
     }
 
     .site-footer {
