@@ -25,6 +25,7 @@ type InteractiveTitleProps = {
   id?: string
   trackingFactor?: number
   maxPoints?: number
+  particleDensity?: number
   wrapText?: boolean
 }
 
@@ -157,14 +158,18 @@ function buildLinks(points: Point[], size: number) {
   return links
 }
 
-function particleBudgetForText(lines: TitleLine[], size: number) {
+function particleBudgetForText(
+  lines: TitleLine[],
+  size: number,
+  particleDensity: number,
+) {
   const letterCount = lines.reduce(
     (count, line) => count + line.text.replace(/\s/g, '').length,
     0,
   )
   const pointsPerLetter = clamp(Math.round(size * 0.55), 18, 48)
 
-  return clamp(letterCount * pointsPerLetter, 90, 520)
+  return clamp(Math.round(letterCount * pointsPerLetter * particleDensity), 45, 420)
 }
 
 export function InteractiveTitle({
@@ -174,6 +179,7 @@ export function InteractiveTitle({
   id,
   trackingFactor = -0.035,
   maxPoints,
+  particleDensity = 1,
   wrapText = true,
 }: InteractiveTitleProps) {
   const wrapRef = useRef<HTMLElement>(null)
@@ -314,7 +320,8 @@ export function InteractiveTitle({
         }
       }
 
-      const particleBudget = maxPoints ?? particleBudgetForText(state.lines, fontSize)
+      const particleBudget =
+        maxPoints ?? particleBudgetForText(state.lines, fontSize, particleDensity)
 
       state.points =
         points.length > particleBudget
@@ -562,7 +569,7 @@ export function InteractiveTitle({
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerout', onPointerOut)
     }
-  }, [maxPoints, text, trackingFactor, wrapText])
+  }, [maxPoints, particleDensity, text, trackingFactor, wrapText])
 
   const Wrapper = Heading === 'span' ? 'span' : 'div'
 
