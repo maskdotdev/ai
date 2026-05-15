@@ -20,7 +20,7 @@ type TitleLine = {
 
 type InteractiveTitleProps = {
   text: string
-  as?: 'h1' | 'h2'
+  as?: 'h1' | 'h2' | 'h3' | 'span'
   className?: string
   id?: string
   trackingFactor?: number
@@ -166,8 +166,8 @@ export function InteractiveTitle({
   maxPoints = 260,
   wrapText = true,
 }: InteractiveTitleProps) {
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const headingRef = useRef<HTMLHeadingElement>(null)
+  const wrapRef = useRef<HTMLElement>(null)
+  const headingRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [ready, setReady] = useState(false)
 
@@ -526,6 +526,10 @@ export function InteractiveTitle({
       pointer.active = true
     }
 
+    function onPointerOut(event: PointerEvent) {
+      if (!event.relatedTarget) onPointerLeave()
+    }
+
     function onPointerLeave() {
       pointer.active = false
       pointer.x = -9999
@@ -536,20 +540,22 @@ export function InteractiveTitle({
     resizeObserver.observe(wrap)
     buildTextField()
 
-    canvas.addEventListener('pointermove', onPointerMove)
-    canvas.addEventListener('pointerleave', onPointerLeave)
+    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    window.addEventListener('pointerout', onPointerOut)
     animationFrame = window.requestAnimationFrame(animate)
 
     return () => {
       window.cancelAnimationFrame(animationFrame)
       resizeObserver.disconnect()
-      canvas.removeEventListener('pointermove', onPointerMove)
-      canvas.removeEventListener('pointerleave', onPointerLeave)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerout', onPointerOut)
     }
   }, [maxPoints, text, trackingFactor, wrapText])
 
+  const Wrapper = Heading === 'span' ? 'span' : 'div'
+
   return (
-    <div
+    <Wrapper
       ref={wrapRef}
       style={{
         position: 'relative',
@@ -577,9 +583,10 @@ export function InteractiveTitle({
           position: 'absolute',
           inset: 0,
           display: ready ? 'block' : 'none',
+          pointerEvents: 'none',
           touchAction: 'none',
         }}
       />
-    </div>
+    </Wrapper>
   )
 }

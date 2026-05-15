@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { Container } from '@/components/container'
+import { InteractiveTitle } from '@/components/interactive-title'
 import { projects } from '@/lib/projects'
 
 export function getStaticPaths() {
@@ -11,6 +12,8 @@ export function getStaticPaths() {
 }
 
 const { project } = Astro.props
+const workflow = 'workflow' in project ? project.workflow : []
+const architecture = 'architecture' in project ? project.architecture : []
 ---
 
 <BaseLayout
@@ -22,9 +25,13 @@ const { project } = Astro.props
       <p class="font-mono text-sm font-medium uppercase tracking-[0.08em] text-cyan-400">
         Work / {project.title}
       </p>
-      <h1 class="mt-6 text-6xl font-light tracking-tight text-white sm:text-8xl">
-        {project.title}
-      </h1>
+      <InteractiveTitle
+        client:visible
+        text={project.title}
+        className="mt-6 text-6xl font-light tracking-tight text-white sm:text-8xl"
+        maxPoints={180}
+        wrapText={false}
+      />
       <p class="mt-6 max-w-4xl text-2xl font-light leading-snug text-neutral-200">
         {project.description}
       </p>
@@ -54,6 +61,53 @@ const { project } = Astro.props
             {project.why}
           </p>
         </section>
+
+        {
+          workflow.length > 0 && (
+            <section>
+              <h2 class="text-2xl font-light tracking-tight text-white">How it works</h2>
+              <div class="mt-8 grid gap-5 md:grid-cols-2">
+                {workflow.map((step, index) => (
+                  <div class="border-l border-white/10 pl-5">
+                    <p class="font-mono text-xs font-medium uppercase tracking-[0.08em] text-cyan-400">
+                      Step {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <h3 class="mt-2 text-base font-medium text-white">{step.title}</h3>
+                    <p class="mt-3 text-sm font-light leading-6 text-neutral-500">
+                      {step.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        }
+
+        {
+          architecture.length > 0 && (
+            <section>
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <h2 class="text-2xl font-light tracking-tight text-white">
+                  Architecture
+                </h2>
+                <p class="max-w-2xl text-sm font-light leading-6 text-neutral-500">
+                  The crates stay narrow so parser code, storage mutation, query
+                  behavior, and CLI commands can evolve independently.
+                </p>
+              </div>
+              <div class="mt-8 divide-y divide-white/[0.06] border-y border-white/[0.06]">
+                {architecture.map((part) => (
+                  <div class="grid gap-3 py-5 sm:grid-cols-[10rem_1fr] sm:gap-8">
+                    <h3 class="font-mono text-sm text-cyan-400">{part.name}</h3>
+                    <p class="text-sm font-light leading-6 text-neutral-500">
+                      {part.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        }
 
         <section>
           <h2 class="text-2xl font-light tracking-tight text-white">System</h2>

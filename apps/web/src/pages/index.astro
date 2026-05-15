@@ -6,7 +6,7 @@ const work = projects.map((project, index) => ({
   title: project.title,
   description: project.description,
   category: project.category,
-  href: `/projects/${project.slug}`,
+  href: 'externalUrl' in project ? project.externalUrl : `/projects/${project.slug}`,
   icon: ['eye', 'grid', 'flask'][index],
 }))
 
@@ -101,7 +101,14 @@ const nav = [
                     </svg>
                   )}
                 </span>
-                <span class="work-title">{item.title}</span>
+                <InteractiveTitle
+                  client:visible
+                  as="span"
+                  text={item.title}
+                  className="work-title"
+                  maxPoints={120}
+                  wrapText={false}
+                />
                 <span class="work-description">{item.description}</span>
                 <span class="work-category">{item.category}</span>
                 <span class="work-arrow" aria-hidden="true">
