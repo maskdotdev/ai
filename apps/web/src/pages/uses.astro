@@ -1,48 +1,720 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro'
-import { Card } from '@/components/card'
-import { Section } from '@/components/section'
-import SimpleLayout from '@/components/SimpleLayout.astro'
+import { InteractiveTitle } from '@/components/interactive-title'
+
+const nav = [
+  { label: 'Work', href: '/#work' },
+  { label: 'About', href: '/uses', active: true },
+  { label: 'Writing', href: '/articles' },
+  { label: 'Contact', href: 'mailto:hello@mask.dev' },
+]
+
+const focusAreas = [
+  {
+    label: 'Code Intelligence',
+    title: 'Repository-aware systems',
+    description:
+      'I build tools that turn codebases into durable structure: symbols, dependencies, references, review context, and graph-shaped knowledge.',
+    icon: 'graph',
+  },
+  {
+    label: 'AI Infrastructure',
+    title: 'Precise AI workflows',
+    description:
+      'I care about agentic systems that can inspect, reason, verify, and ship without turning every task into vague prompt theater.',
+    icon: 'signal',
+  },
+  {
+    label: 'Developer Tools',
+    title: 'Interfaces for builders',
+    description:
+      'The best tools disappear into the work. I like compact interfaces, fast feedback loops, and systems that explain their own state.',
+    icon: 'terminal',
+  },
+]
+
+const principles = [
+  'Make the system observable before making it clever.',
+  'Prefer durable structure over disposable context.',
+  'Keep interfaces dense enough for real work.',
+  'Use automation where it improves judgment, not where it hides it.',
+]
+
+const tools = [
+  'Rust',
+  'TypeScript',
+  'Astro',
+  'React',
+  'Tree-sitter',
+  'Graph indexes',
+  'Bun',
+  'Vercel',
+]
 ---
 
-<BaseLayout
-  title="Uses - Kiyotaka"
-  description="Software I use, gadgets I love, and other things I recommend."
->
-  <SimpleLayout
-    title="Software I use, gadgets I love, and other things I recommend."
-    intro="I get asked a lot about the things I use to build software, stay productive, or buy to fool myself into thinking I'm being productive when I'm really just procrastinating. Here's a big list of all of my favorite stuff."
-  >
-    <div class="space-y-20">
-      <Section title="Workstation">
-        <ul role="list" class="space-y-16">
-          <Card as="li"><Card.Title as="h3">16in MacBook Pro, M1 Max, 64GB RAM (2021)</Card.Title><Card.Description>I was using an Intel-based 16in MacBook Pro prior to this and the difference is night and day. I've never heard the fans turn on a single time, even under the incredibly heavy loads I put it through with our various launch simulations.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">Apple Pro Display XDR (Standard Glass)</Card.Title><Card.Description>The only display on the market if you want something HiDPI and bigger than 27in. When you're working at planetary scale, every pixel you can get counts.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">IBM Model M SSK Industrial Keyboard</Card.Title><Card.Description>They do not make keyboards the way they used to. I buy these any time I see them go up for sale and keep them in storage in case I need parts or need to retire my main.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">Apple Magic Trackpad</Card.Title><Card.Description>Something about all the gestures makes me feel like a wizard with special powers. I really like feeling like a wizard with special powers.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">Herman Miller Aeron Chair</Card.Title><Card.Description>If I'm going to slouch in the worst ergonomic position imaginable all day, I might as well do it in an expensive chair.</Card.Description></Card>
-        </ul>
-      </Section>
-      <Section title="Development tools">
-        <ul role="list" class="space-y-16">
-          <Card as="li"><Card.Title as="h3">Sublime Text 4</Card.Title><Card.Description>I do not care if it's missing all of the fancy IDE features everyone else relies on, Sublime Text is still the best text editor ever made.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">iTerm2</Card.Title><Card.Description>I'm honestly not even sure what features I get with this that are not just part of the macOS Terminal but it's what I use.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">TablePlus</Card.Title><Card.Description>Great software for working with databases. Has saved me from building about a thousand admin interfaces for my various projects over the years.</Card.Description></Card>
-        </ul>
-      </Section>
-      <Section title="Design">
-        <ul role="list" class="space-y-16">
-          <Card as="li"><Card.Title as="h3">Figma</Card.Title><Card.Description>We started using Figma as just a design tool but now it's become our virtual whiteboard for the entire company. Never would have expected the collaboration features to be the real hook.</Card.Description></Card>
-        </ul>
-      </Section>
-      <Section title="Productivity">
-        <ul role="list" class="space-y-16">
-          <Card as="li"><Card.Title as="h3">Alfred</Card.Title><Card.Description>It's not the newest kid on the block but it's still the fastest. The Sublime Text of the application launcher world.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">Reflect</Card.Title><Card.Description>Using a daily notes system instead of trying to keep things organized by topics has been super powerful for me. And with Reflect, it's still easy for me to keep all of that stuff discoverable by topic even though all of my writing happens in the daily note.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">SavvyCal</Card.Title><Card.Description>Great tool for scheduling meetings while protecting my calendar and making sure I still have lots of time for deep work during the week.</Card.Description></Card>
-          <Card as="li"><Card.Title as="h3">Focus</Card.Title><Card.Description>Simple tool for blocking distracting websites when I need to just do the work and get some momentum going.</Card.Description></Card>
-        </ul>
-      </Section>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About - mask.dev</title>
+    <meta
+      name="description"
+      content="About mask.dev: AI infrastructure, code intelligence, and developer tools."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="about-shell">
+    <div class="scene-noise" aria-hidden="true"></div>
+    <div class="scene-glow" aria-hidden="true"></div>
+    <div class="scene-frame">
+      <header class="site-header" aria-label="Primary navigation">
+        <a class="brand" href="/" aria-label="mask.dev home">
+          <span>mask</span><span>.dev</span>
+        </a>
+        <nav>
+          {nav.map((item) => (
+            <a class:list={{ active: item.active }} href={item.href}>{item.label}</a>
+          ))}
+        </nav>
+      </header>
+
+      <main>
+        <section class="about-hero" aria-labelledby="about-title">
+          <p class="eyebrow">About <span></span> Systems Builder</p>
+          <InteractiveTitle
+            client:visible
+            id="about-title"
+            text="Making code legible to machines."
+            className="about-title"
+            wrapText={false}
+          />
+          <p class="lede">AI infrastructure, code intelligence, and tools for developers.</p>
+          <p class="intro">
+            I build systems that help engineers understand software at the level
+            of structure, intent, and impact. The common thread is practical AI:
+            less spectacle, more leverage.
+          </p>
+          <div class="actions" aria-label="About actions">
+            <a class="button button-primary" href="/#work">
+              View Work
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h13m-5-5 5 5-5 5" />
+              </svg>
+            </a>
+            <a class="button button-secondary" href="mailto:hello@mask.dev">
+              Contact
+            </a>
+          </div>
+        </section>
+
+        <section class="focus-section" aria-labelledby="focus-title">
+          <div class="section-label">
+            <h2 id="focus-title">Focus</h2>
+            <span></span>
+          </div>
+          <div class="focus-list">
+            {focusAreas.map((area) => (
+              <article class="focus-row">
+                <span class="focus-icon" aria-hidden="true">
+                  {area.icon === 'graph' && (
+                    <svg viewBox="0 0 32 32">
+                      <circle cx="8" cy="9" r="2.5" />
+                      <circle cx="24" cy="9" r="2.5" />
+                      <circle cx="16" cy="23" r="2.5" />
+                      <path d="M10.2 10.3 14 20.8M21.8 10.3 18 20.8M10.5 9h11" />
+                    </svg>
+                  )}
+                  {area.icon === 'signal' && (
+                    <svg viewBox="0 0 32 32">
+                      <path d="M7 22c2.2-3.1 5.2-4.7 9-4.7s6.8 1.6 9 4.7" />
+                      <path d="M11 25c1.2-1.5 2.9-2.3 5-2.3s3.8.8 5 2.3" />
+                      <path d="M5 16.7C8 12.9 11.7 11 16 11s8 1.9 11 5.7" />
+                    </svg>
+                  )}
+                  {area.icon === 'terminal' && (
+                    <svg viewBox="0 0 32 32">
+                      <path d="m9 11 5 5-5 5" />
+                      <path d="M16 22h7" />
+                      <rect x="5" y="7" width="22" height="18" rx="2.5" />
+                    </svg>
+                  )}
+                </span>
+                <span class="focus-copy">
+                  <span class="focus-label">{area.label}</span>
+                  <strong>{area.title}</strong>
+                  <span>{area.description}</span>
+                </span>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section class="about-grid" aria-label="Working style and tools">
+          <div class="principles">
+            <div class="section-label compact">
+              <h2>Operating Mode</h2>
+              <span></span>
+            </div>
+            <ol>
+              {principles.map((principle, index) => (
+                <li>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <p>{principle}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div class="tool-panel">
+            <div class="section-label compact">
+              <h2>Stack</h2>
+              <span></span>
+            </div>
+            <div class="tool-cloud">
+              {tools.map((tool) => <span>{tool}</span>)}
+            </div>
+            <p>
+              The exact tools change. The bias does not: fast local feedback,
+              inspectable data, and deployment paths short enough to use often.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>© 2026 mask.dev</span>
+        <span class="availability"><i></i>Open to new opportunities</span>
+      </footer>
     </div>
-  </SimpleLayout>
-</BaseLayout>
+  </body>
+</html>
+
+<style>
+  :global(html) {
+    background: #010405;
+    overflow-x: clip;
+    scroll-behavior: smooth;
+  }
+
+  :global(.about-shell) {
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: clip;
+    background:
+      radial-gradient(circle at 62% 45%, rgba(7, 209, 226, 0.18), transparent 22rem),
+      radial-gradient(circle at 76% 30%, rgba(12, 55, 64, 0.24), transparent 30rem),
+      linear-gradient(135deg, #010405 0%, #020707 52%, #010303 100%);
+    color: #f6f6f3;
+    font-family:
+      'DM Sans',
+      ui-sans-serif,
+      system-ui,
+      sans-serif;
+  }
+
+  .scene-frame {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    display: flex;
+    min-height: 100vh;
+    width: min(100%, 1920px);
+    margin: 0 auto;
+    flex-direction: column;
+    padding: clamp(1.5rem, 3.6vw, 3.75rem) clamp(1.25rem, 5.35vw, 6.25rem)
+      clamp(1.25rem, 3.3vw, 3.5rem);
+  }
+
+  .scene-noise,
+  .scene-glow {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+  }
+
+  .scene-noise {
+    z-index: 3;
+    opacity: 0.12;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: 4px 4px;
+    mix-blend-mode: screen;
+  }
+
+  .scene-glow {
+    z-index: 0;
+    background:
+      radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 46%, rgba(0, 0, 0, 0.72) 100%),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.64), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.68));
+  }
+
+  .site-header,
+  .site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-block: 0.35rem;
+    background: rgba(1, 4, 5, 0.72);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    color: #f6f6f3;
+    font-size: clamp(1.7rem, 2.05vw, 2.25rem);
+    font-weight: 400;
+    line-height: 1;
+    text-decoration: none;
+    letter-spacing: 0;
+  }
+
+  .brand span:last-child {
+    color: #20dbe9;
+  }
+
+  nav {
+    display: flex;
+    gap: clamp(1.75rem, 4vw, 4.25rem);
+  }
+
+  nav a {
+    position: relative;
+    color: rgba(246, 246, 243, 0.68);
+    font-size: 0.98rem;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  nav a:hover,
+  nav a.active {
+    color: #f6f6f3;
+  }
+
+  nav a.active::after {
+    position: absolute;
+    left: 50%;
+    bottom: -1.35rem;
+    width: 0.36rem;
+    height: 0.36rem;
+    border-radius: 999px;
+    background: #20dbe9;
+    box-shadow: 0 0 14px rgba(32, 219, 233, 0.78);
+    content: '';
+    transform: translateX(-50%);
+  }
+
+  main {
+    flex: 1;
+  }
+
+  .about-hero {
+    max-width: 68rem;
+    padding-top: clamp(5.5rem, 10vw, 11rem);
+  }
+
+  .eyebrow,
+  .section-label h2,
+  .focus-label {
+    color: #20dbe9;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: clamp(0.72rem, 0.78vw, 0.9rem);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 2rem;
+  }
+
+  .eyebrow span {
+    display: inline-block;
+    width: 0.36rem;
+    height: 0.36rem;
+    border-radius: 999px;
+    background: #20dbe9;
+  }
+
+  :global(.about-title) {
+    margin: 0;
+    max-width: none;
+    color: #ffffff;
+    font-size: clamp(3.25rem, 5vw, 6.35rem);
+    font-weight: 400;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+    text-shadow: 0 0 24px rgba(255, 255, 255, 0.16);
+  }
+
+  .lede {
+    max-width: 62rem;
+    margin: 1.1rem 0 0;
+    color: rgba(246, 246, 243, 0.62);
+    font-size: clamp(2rem, 2.95vw, 4rem);
+    font-weight: 400;
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+  }
+
+  .intro {
+    max-width: 46rem;
+    margin: 2.5rem 0 0;
+    color: rgba(246, 246, 243, 0.7);
+    font-size: clamp(1.02rem, 1.18vw, 1.35rem);
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .button {
+    display: inline-flex;
+    min-width: 13.5rem;
+    height: 4rem;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    color: #f8faf9;
+    font-size: 1rem;
+    text-decoration: none;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+  }
+
+  .button-primary {
+    border-color: rgba(32, 219, 233, 0.8);
+    background: linear-gradient(135deg, #37f2ff, #22b7cf);
+    color: #031113;
+    box-shadow: 0 0 28px rgba(32, 219, 233, 0.22);
+  }
+
+  .button-secondary {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .button-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.58);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .focus-section,
+  .about-grid {
+    margin-top: clamp(5.5rem, 9vw, 10.5rem);
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+  }
+
+  .section-label h2 {
+    flex: none;
+    margin: 0;
+  }
+
+  .section-label span {
+    height: 1px;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .focus-list {
+    margin-top: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .focus-row {
+    display: grid;
+    grid-template-columns: 5.75rem minmax(14rem, 22rem) minmax(0, 1fr);
+    gap: clamp(1rem, 2.2vw, 3rem);
+    align-items: center;
+    min-height: 10rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .focus-icon {
+    display: grid;
+    width: 4.1rem;
+    height: 4.1rem;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 5px;
+    color: #20dbe9;
+  }
+
+  .focus-icon svg {
+    width: 2rem;
+    height: 2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  .focus-copy {
+    display: grid;
+    grid-column: 2 / 4;
+    grid-template-columns: minmax(14rem, 22rem) minmax(0, 42rem);
+    gap: clamp(1rem, 2.2vw, 3rem);
+    align-items: center;
+  }
+
+  .focus-copy strong {
+    grid-column: 1;
+    grid-row: 2;
+    color: #fff;
+    font-size: clamp(2rem, 3.4vw, 4.15rem);
+    font-weight: 650;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .focus-copy > span:last-child {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    color: rgba(246, 246, 243, 0.58);
+    font-size: clamp(0.98rem, 1.05vw, 1.2rem);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(22rem, 0.85fr);
+    gap: clamp(2rem, 5vw, 6rem);
+  }
+
+  .compact h2 {
+    white-space: nowrap;
+  }
+
+  .principles ol {
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .principles li {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1.25rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .principles li span {
+    color: #20dbe9;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: 0.88rem;
+  }
+
+  .principles li p,
+  .tool-panel p {
+    margin: 0;
+    color: rgba(246, 246, 243, 0.62);
+    font-size: clamp(1rem, 1.08vw, 1.22rem);
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  .tool-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .tool-cloud span {
+    border: 1px solid rgba(32, 219, 233, 0.2);
+    border-radius: 999px;
+    padding: 0.62rem 0.85rem;
+    background: rgba(32, 219, 233, 0.035);
+    color: rgba(246, 246, 243, 0.82);
+    font-size: 0.92rem;
+    box-shadow: inset 0 0 16px rgba(32, 219, 233, 0.04);
+  }
+
+  .tool-panel p {
+    margin-top: 2rem;
+  }
+
+  .site-footer {
+    margin-top: 5rem;
+    color: rgba(246, 246, 243, 0.26);
+    font-size: 0.98rem;
+  }
+
+  .availability {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    color: rgba(246, 246, 243, 0.48);
+  }
+
+  .availability i {
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 999px;
+    background: #20dbe9;
+    box-shadow: 0 0 12px rgba(32, 219, 233, 0.72);
+  }
+
+  @media (max-width: 980px) {
+    nav {
+      gap: 1.35rem;
+    }
+
+    .focus-row {
+      grid-template-columns: 4.75rem 1fr;
+      padding: 1.8rem 0;
+    }
+
+    .focus-copy {
+      grid-column: 2;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+
+    .focus-copy strong,
+    .focus-copy > span:last-child {
+      grid-column: auto;
+      grid-row: auto;
+    }
+
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .scene-frame {
+      padding: 1.35rem 1.1rem 1.5rem;
+    }
+
+    .site-header,
+    .site-footer {
+      align-items: flex-start;
+      gap: 1.4rem;
+    }
+
+    .site-header {
+      flex-direction: column;
+    }
+
+    nav {
+      width: 100%;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+
+    nav a {
+      font-size: 0.88rem;
+    }
+
+    nav a.active::after {
+      bottom: -0.8rem;
+    }
+
+    .about-hero {
+      padding-top: 4.6rem;
+    }
+
+    :global(.about-title) {
+      font-size: clamp(3rem, 15vw, 5rem);
+      white-space: normal;
+    }
+
+    .lede {
+      font-size: clamp(1.85rem, 9vw, 3.15rem);
+    }
+
+    .actions {
+      gap: 0.85rem;
+    }
+
+    .button {
+      width: 100%;
+      min-width: 0;
+      height: 3.65rem;
+    }
+
+    .focus-row {
+      grid-template-columns: 3.7rem minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .focus-icon {
+      width: 3.1rem;
+      height: 3.1rem;
+    }
+
+    .focus-icon svg {
+      width: 1.55rem;
+      height: 1.55rem;
+    }
+
+    .focus-copy strong {
+      font-size: clamp(2.25rem, 12vw, 4rem);
+    }
+
+    .principles li {
+      grid-template-columns: 3.25rem minmax(0, 1fr);
+    }
+
+    .site-footer {
+      flex-direction: column-reverse;
+      font-size: 0.9rem;
+    }
+  }
+</style>
